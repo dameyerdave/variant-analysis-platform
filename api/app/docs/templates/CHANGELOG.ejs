@@ -1,0 +1,12 @@
+# Changelog
+## Current Version
+<% commits.forEach(function (commit) { %>
+  <% if (commit.tag) { %>
+## Version <%= commit.tag %>
+  <% } %>
+* __<%= commit.title %>__
+  <p>
+  <%= commit.messageLines.join("\n    ") %>
+  <small>@ <%= dateFnsFormat(commit.committerDate, "YYYY-MM-DD HH:mm:ss")%> (<i><%= commit.sha1.slice(0,8) %></i>)</small>
+  </p>
+<% }) %>

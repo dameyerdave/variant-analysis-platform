@@ -1,0 +1,15 @@
+# Development Environment
+.vscode
+
+# Environment configuration
+.env*
+Pipfile*
+
+# Folders
+build
+dist
+node_modules
+*.egg-info
+
+# Generated files
+CHANGELOG.md

@@ -1,0 +1,15 @@
+FROM node:17-alpine
+
+ARG GIT_VERSION
+ARG GIT_BRANCH
+ARG GIT_LASTCOMMITDATE
+ENV VUE_APP_VERSION=${GIT_VERSION}
+ENV VUE_APP_BRANCH=${GIT_BRANCH}
+ENV VUE_APP_LASTCOMMITDATE=${GIT_LASTCOMMITDATE}
+
+COPY ./app /app
+WORKDIR /app
+RUN npx browserslist@latest --update-db
+RUN yarn install && yarn upgrade
+
+CMD yarn serve --host 0.0.0.0 --port 8080

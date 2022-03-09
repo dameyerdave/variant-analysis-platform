@@ -1,0 +1,26 @@
+Arguments: 
+  /usr/bin/node /usr/share/node_modules/yarn/bin/yarn.js add -D --modules-folder /app/../node_modules git-release-notes
+
+PATH: 
+  /usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+Yarn version: 
+  1.22.17
+
+Node version: 
+  16.14.0
+
+Platform: 
+  linux x64
+
+Trace: 
+  Error: EACCES: permission denied, mkdir '/node_modules'
+
+npm manifest: 
+  No manifest
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
