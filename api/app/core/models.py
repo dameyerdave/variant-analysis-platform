@@ -5,7 +5,7 @@ from django.contrib.postgres.fields import ArrayField
 
 
 class Gene(models.Model):
-    symbol = models.CharField(max_length=10)
+    symbol = models.CharField(max_length=10, unique=True)
     ensembl_id = models.CharField(max_length=15, null=True)
     annotations = models.JSONField(null=True)
 
@@ -45,7 +45,13 @@ class Variant(models.Model):
         max_length=lookup.variant_type.max_length, choices=lookup.variant_type.choices)
 
     def __str__(self):
-        return f"{self.assembly}:{self.chromosome}:{self.start}-{self.end} ({self.allele_string})"
+        return f"{self.assembly}: {self.chromosome}_{self.start}_{self.allele_string}"
+
+    @property
+    def extra(self):
+        return {
+            'most_severe_consequence': self.most_severe_consequence.hr_term,
+        }
 
 
 class Transcript(models.Model):
@@ -66,3 +72,15 @@ class Transcript(models.Model):
 
     def __str__(self):
         return f"{self.variant} | {self.ensembl_id} ({self.gene})"
+
+    @property
+    def hgvsg(self):
+        return f"{self.variant.chromosome}:{self.variant.start}{self.variant.allele_string.replace('/', '>')}",
+
+    @property
+    def extra(self):
+        return {
+            'variant': str(self.variant),
+            'gene': str(self.gene),
+            'hgvsg': self.hgvsg
+        }

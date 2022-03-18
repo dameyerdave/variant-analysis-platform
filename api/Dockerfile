@@ -12,8 +12,8 @@ ENV GIT_LASTCOMMITDATE=${GIT_LASTCOMMITDATE}
 
 COPY ./requirements.txt /requirements.txt
 RUN apk add --update --no-cache postgresql-client jpeg-dev git bash
-RUN apk add --update --no-cache --virtual .tmp-build-deps   gcc libc-dev linux-headers postgresql-dev musl-dev zlib zlib-dev libffi-dev
-RUN apk --no-cache add nodejs yarn --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN apk add --update --no-cache --virtual .tmp-build-deps gcc g++ make libc-dev linux-headers postgresql-dev musl-dev zlib zlib-dev bzip2-dev xz-dev libffi-dev
+RUN apk add --update --no-cache nodejs yarn --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
 RUN rm -f package.json yarn.lock
 RUN pip --disable-pip-version-check install --upgrade pip
 RUN pip install -r /requirements.txt

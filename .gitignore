@@ -1,6 +1,9 @@
 # Development Environment
 .vscode
 
+# Python exclusions
+__pycache__
+
 # Environment configuration
 .env*
 Pipfile*
@@ -13,3 +16,4 @@ node_modules
 
 # Generated files
 CHANGELOG.md
+yarn-error.log

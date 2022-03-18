@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 from datetime import timedelta as td
 from os import environ
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,16 +40,30 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',
+    'corsheaders',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_jwt',
+    'rest_framework_jwt.blacklist',
+    'django_mkdocs',
+    'export_app',
+    'drf_auto_endpoint',
+    'vdp',
+    'core',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'vdp.urls'
@@ -136,6 +151,8 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = '/vol/web/media'
 STATIC_ROOT = '/vol/web/static'
 
+DISABLE_AUTH = True
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -154,7 +171,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
-        # 'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
         'rest_framework.permissions.IsAuthenticated'
     ],
     'DEFAULT_FILTER_BACKENDS': [
@@ -162,7 +179,15 @@ REST_FRAMEWORK = {
     ],
     # 'DEFAULT_METADATA_CLASS': 'meta.serializers.APIMetadata',
     'DEFAULT_METADATA_CLASS': 'drf_auto_endpoint.metadata.AutoMetadata',
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
+
+# Disable authentication
+if DISABLE_AUTH:
+    REST_FRAMEWORK.update({
+        'DEFAULT_AUTHENTICATION_CLASSES': [],
+        'DEFAULT_PERMISSION_CLASSES': [],
+    })
 
 FIXTURE_DIRS = []
 
@@ -179,21 +204,18 @@ DOCUMENTATION_HTML_ROOT = DOCUMENTATION_ROOT + '/site'
 DOCUMENTATION_XSENDFILE = False
 def DOCUMENTATION_ACCESS_FUNCTION(_): return True
 
+###
+# SECURITY
+###
 
-INSTALLED_APPS += [
-    'django_filters',
-    'corsheaders',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'rest_framework_jwt',
-    'rest_framework_jwt.blacklist',
-    'django_mkdocs',
-    'export_app',
-    'drf_auto_endpoint',
-    'vdp',
-    'core',
-]
 
-MIDDLEWARE += [
-    'corsheaders.middleware.CorsMiddleware',
-]
+ALLOWED_HOSTS = environ.get('DJANGO_ALLOWED_HOSTS').split(',')
+
+# CORS configuration
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = environ.get('DJANGO_CORS_ALLOWED_ORIGINS').split(',')
+CORS_ALLOW_HEADERS = default_headers + ('cache-control', 'pragma', 'expires')
+CORS_ALLOW_CREDENTIALS = True
+
+# CSRF configuration
+CSRF_TRUSTED_ORIGINS = environ.get('DJANGO_CSRF_TRUSTED_ORIGINS').split(',')

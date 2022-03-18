@@ -11,9 +11,9 @@ if [ ! -f ${GRN} ]; then
   yarn add -D --modules-folder ${DIR}/node_modules git-release-notes
 fi
 
-first=
+first=$(git log --reverse --pretty="%h" | head -1)
 last=HEAD
 
 echo "Generating CHANGELOG..."
-${GRN} -p ${DIR} -b master ${first}..${last} ${DIR}/templates/CHANGELOG.ejs > ${CHANGELOG}
+${GRN} -p ${DIR} -b main ${first}..${last} ${DIR}/templates/CHANGELOG.ejs > ${CHANGELOG}
 echo "CHANGELOG generated at ${CHANGELOG}."

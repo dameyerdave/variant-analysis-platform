@@ -5,14 +5,16 @@ FROM node:16.13-bullseye as build-stage
 ARG GIT_VERSION
 ARG GIT_BRANCH
 ARG GIT_LASTCOMMITDATE
-ENV VUE_APP_VERSION=${GIT_VERSION}
-ENV VUE_APP_BRANCH=${GIT_BRANCH}
-ENV VUE_APP_LASTCOMMITDATE=${GIT_LASTCOMMITDATE}
+ENV VITE_APP_VERSION=${GIT_VERSION}
+ENV VITE_APP_BRANCH=${GIT_BRANCH}
+ENV VITE_APP_LASTCOMMITDATE=${GIT_LASTCOMMITDATE}
 
 COPY ./app /app
 WORKDIR /app
-RUN npx browserslist@latest --update-db
+RUN npm install -g npm@latest
+RUN yarn global add vite
 RUN yarn install
+RUN npx browserslist@latest --update-db
 RUN yarn build
 
 FROM nginx:stable as production-stage

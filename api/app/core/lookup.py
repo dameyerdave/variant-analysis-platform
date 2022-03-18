@@ -9,8 +9,9 @@ class DD(dict):
 
 
 class Lookup():
-    def __init__(self, choices: list, validator: Callable = lambda v: True, clean: Callable = lambda v: v):
+    def __init__(self, choices: list, alias_choices: dict = None, validator: Callable = lambda v: True, clean: Callable = lambda v: v):
         self.__choices = self.__make_touples(choices)
+        self.__alias_choices = alias_choices
         self.__validator = validator
         self.__clean = clean
 
@@ -26,6 +27,10 @@ class Lookup():
         return self.__choices
 
     @property
+    def alias_choices(self):
+        return self.__alias_choices
+
+    @property
     def validator(self):
         return [self.__validator]
 
@@ -33,13 +38,22 @@ class Lookup():
     def clean(self):
         return self.__clean
 
+    def normalize(self, value):
+        """ Normalizes the given value based on the lookup definition """
+        # Translate choice aliases to the correct value
+        if value in self.__alias_choices:
+            return self.__alias_choices[value]
+
+        return value
+
 
 lookup = DD({
     'chromosome': Lookup(
         choices=list(map(lambda n: str(n), range(1, 23))) + ['X', 'Y']
     ),
     'assembly': Lookup(
-        choices=['GRCh38', 'GRCh37']
+        choices=['GRCh38', 'GRCh37'],
+        alias_choices={'hg19': 'GRCh37', 'hg38': 'GRCh38'}
     ),
     'strand': Lookup(
         choices=['+', '-']

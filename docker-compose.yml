@@ -21,7 +21,12 @@ services:
     restart: unless-stopped
     volumes:
       - ./api/app:/app
-      - ./.git:/app/.git
+      - ./.git:/.git
+    environment:
+      - POSTGRES_HOST=db
+    env_file: .env
+    depends_on:
+      - db
     command: >
       sh -c "./docs/scripts/generate_changelog.sh &&
              (cd docs; mkdocs build --clean) &&
@@ -31,11 +36,6 @@ services:
              python manage.py migrate &&
              python manage.py initadmin &&
              python manage.py runserver 0.0.0.0:5000"
-    environment:
-      - POSTGRES_HOST=db
-    env_file: .env
-    depends_on:
-      - db
   db:
     image: postgres:13.4-alpine
     hostname: db
