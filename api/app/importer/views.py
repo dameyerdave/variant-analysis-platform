@@ -2,7 +2,7 @@ from urllib import response
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .proxys import vep
+from .proxys import vep, genenames
 from django.utils.translation import gettext as _
 from core.models import Variant, Transcript, Gene, VariantConsequence
 from django.db import transaction
@@ -20,10 +20,10 @@ class AddVepVariantView(APIView):
         if len(parts) < 3:
             return Response({'detail': _('region %(region)s is not in the required format') % {'region': region}},
                             status.HTTP_406_NOT_ACCEPTABLE)
-        resp = vep(f"{parts[0]}:{parts[1]}/{parts[2]}",
-                   input_type='region', GRCh37=GRCh37, refseq=False)
-        if resp.ok:
-            vep_info = resp.json()[0]
+        vep_resp = vep(f"{parts[0]}:{parts[1]}/{parts[2]}",
+                       input_type='region', GRCh37=GRCh37, refseq=False)
+        if vep_resp.ok:
+            vep_info = vep_resp.json()[0]
             with transaction.atomic():
                 variant, _ = Variant.objects.get_or_create(
                     assembly=vep_info.get('assembly_name'),
@@ -38,11 +38,18 @@ class AddVepVariantView(APIView):
                 )
                 for transcript_consequence in vep_info.get('transcript_consequences'):
                     if transcript_consequence.get('canonical'):
-                        gene, _ = Gene.objects.get_or_create(
+                        gene, created = Gene.objects.get_or_create(
                             symbol=transcript_consequence.get('gene_symbol'),
                             ensembl_id=transcript_consequence.get('gene_id'),
                             annotations={}
                         )
+                        if created:
+                            genenames_resp = genenames(
+                                transcript_consequence.get('gene_symbol'))
+                            if genenames_resp.ok:
+                                gene_info = genenames_resp.json()
+                                gene.annotations = gene_info['response']['docs'][0]
+                                gene.save()
                         _transcript_name, found = transcript_name(
                             transcript_consequence)
                         if found:
@@ -59,4 +66,4 @@ class AddVepVariantView(APIView):
                             )
             return Response(vep_info, status.HTTP_201_CREATED)
         else:
-            return Response(resp.json(), status.HTTP_400_BAD_REQUEST)
+            return Response(vep_resp.json(), status.HTTP_400_BAD_REQUEST)

@@ -1,11 +1,13 @@
 import requests
 
-API = 'https://rest.ensembl.org'
-OLD_API = 'https://grch37.rest.ensembl.org'
+VEP_API = 'https://rest.ensembl.org'
+VEP_OLD_API = 'https://grch37.rest.ensembl.org'
+
+GENENAMES_API = 'http://rest.genenames.org/fetch/{}/{}'
 
 
 def vep(input, species='human', input_type='hgvs', GRCh37=False, refseq=False):
-    req = f"{API if not GRCh37 else OLD_API}/vep/{species}/{input_type}/{input}"
+    req = f"{VEP_API if not GRCh37 else VEP_OLD_API}/vep/{species}/{input_type}/{input}"
     params = {
         'canonical': True,
         'hgvs': True,
@@ -20,5 +22,17 @@ def vep(input, species='human', input_type='hgvs', GRCh37=False, refseq=False):
     resp = requests.get(req, headers={
         'Content-Type': 'application/json'
     }, params=params)
+
+    return resp
+
+
+def genenames(symbol):
+    for by in ['symbol', 'prev_symbol', 'alias_symbol']:
+        try:
+            resp = requests.get(GENENAMES_API.format(by, symbol), headers={
+                "Accept": "application/json"})
+            break
+        except:
+            continue
 
     return resp

@@ -13,6 +13,7 @@ build
 dist
 node_modules
 *.egg-info
+api/app/docs/site
 
 # Generated files
 CHANGELOG.md

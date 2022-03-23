@@ -5,6 +5,7 @@ from django.contrib.postgres.fields import ArrayField
 
 
 class Gene(models.Model):
+    """ The gene model including flexible annotations """
     symbol = models.CharField(max_length=10, unique=True)
     ensembl_id = models.CharField(max_length=15, null=True)
     annotations = models.JSONField(null=True)
@@ -14,6 +15,7 @@ class Gene(models.Model):
 
 
 class VariantConsequence(models.Model):
+    """ The lookup for VEP variant consequences """
     term = models.TextField()
     hr_term = models.TextField()
     impact = models.CharField(
@@ -26,6 +28,7 @@ class VariantConsequence(models.Model):
 
 
 class Variant(models.Model):
+    """ The variant model """
     related_name = 'variants'
 
     assembly = models.CharField(
@@ -55,6 +58,7 @@ class Variant(models.Model):
 
 
 class Transcript(models.Model):
+    """ The transcript model including flexible annotations """
     related_name = 'transcripts'
 
     name = models.TextField()

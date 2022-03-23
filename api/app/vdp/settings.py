@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'drf_auto_endpoint',
     'vdp',
     'core',
+    'importer'
 ]
 
 MIDDLEWARE = [
