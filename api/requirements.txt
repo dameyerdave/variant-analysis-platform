@@ -26,6 +26,7 @@ django-computed-property==0.3.0
 django-cors-headers==3.11.0
 django-filter==21.1
 django-mkdocs @ git+https://github.com/dameyerdave/django-mkdocs.git@2d55f704e6be1511eec7d6fd46e665ed86bc460d
+django-phonenumber-field[phonenumbers]==6.1.0
 djangorestframework==3.13.1
 docker==5.0.3
 drf-jwt==1.19.2

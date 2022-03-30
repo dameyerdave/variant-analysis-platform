@@ -1,7 +1,10 @@
 from __future__ import annotations
 from django.db import models
+from django.core import validators
+from django.forms import CharField
 from core.lookup import lookup
 from django.contrib.postgres.fields import ArrayField
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class Gene(models.Model):
@@ -61,8 +64,8 @@ class Transcript(models.Model):
     """ The transcript model including flexible annotations """
     related_name = 'transcripts'
 
+    ensembl_id = models.TextField(null=True, unique=True)
     name = models.TextField()
-    ensembl_id = models.TextField(null=True)
 
     hgvsg = models.TextField(null=True)
     hgvsc = models.TextField(null=True)
@@ -88,3 +91,28 @@ class Transcript(models.Model):
             'gene': str(self.gene),
             'hgvsg': self.hgvsg
         }
+
+
+class Sample(models.Model):
+    related_name = 'samples'
+
+    sample_id = models.CharField(max_length=20, primary_key=True)
+    variants = models.ManyToManyField(Variant, related_name=related_name)
+
+
+class Patient(models.Model):
+    related_name = 'patients'
+
+    prename = models.CharField(max_length=50)
+    middle_name = models.CharField(max_length=50)
+    surename = models.CharField(max_length=50)
+
+    street = models.CharField(max_length=50)
+    house_number = models.IntegerField(
+        validators=[validators.MinValueValidator(1)])
+
+    zip = models.IntegerField(validators=[validators.MinValueValidator(1000)])
+    place = CharField(max_length=50)
+
+    phone = PhoneNumberField()
+    email = models.EmailField()
