@@ -7,6 +7,8 @@ ENV VITE_APP_VERSION=${GIT_VERSION}
 ENV VITE_APP_BRANCH=${GIT_BRANCH}
 ENV VITE_APP_LASTCOMMITDATE=${GIT_LASTCOMMITDATE}
 
+ENV PATH="$PATH:/app/node_modules/.bin"
+
 COPY ./app /app
 WORKDIR /app
 RUN npm install -g npm@latest
