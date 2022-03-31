@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   ui:
@@ -7,14 +7,12 @@ services:
     volumes:
       - ./ui/app:/app
     ports:
-      - '8071:8071'
+      - "8071:8071"
     command: >
-      sh -c "yarn install &&
-            npx browserslist@latest --update-db &&
-            yarn dev --host 0.0.0.0 --port 8071"
+      sh -c "yarn dev --host 0.0.0.0 --port 8071"
   api:
     ports:
-      - '5071:5000'
+      - "5071:5000"
   db:
     ports:
-        - '54371:5432'
+      - "54371:5432"

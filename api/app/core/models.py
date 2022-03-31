@@ -9,7 +9,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 class Gene(models.Model):
     """ The gene model including flexible annotations """
-    symbol = models.CharField(max_length=10, unique=True)
+    symbol = models.CharField(max_length=20, unique=True)
     ensembl_id = models.CharField(max_length=15, null=True)
     annotations = models.JSONField(null=True)
 
@@ -57,6 +57,7 @@ class Variant(models.Model):
     def extra(self):
         return {
             'most_severe_consequence': self.most_severe_consequence.hr_term,
+            'transcript_names': list(map(lambda t: t.name, self.transcripts.all()))
         }
 
 
@@ -71,7 +72,7 @@ class Transcript(models.Model):
     hgvsc = models.TextField(null=True)
     hgvsp = models.TextField(null=True)
 
-    variant = models.ForeignKey(Variant, on_delete=models.CASCADE)
+    variant = models.ForeignKey(Variant, related_name=related_name, on_delete=models.CASCADE)
     gene = models.ForeignKey(
         Gene, related_name=related_name, on_delete=models.CASCADE)
 
@@ -116,3 +117,4 @@ class Patient(models.Model):
 
     phone = PhoneNumberField()
     email = models.EmailField()
+

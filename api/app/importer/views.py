@@ -23,7 +23,11 @@ class AddVepVariantView(APIView):
         if len(parts) < 3:
             return Response({'detail': _('region %(region)s is not in the required format') % {'region': region}},
                             status.HTTP_406_NOT_ACCEPTABLE)
-        vep_resp = vep(f"{parts[0]}:{parts[1]}/{parts[2]}",
+        if len(parts) == 3:
+            vep_resp = vep(f"{parts[0]}:{parts[1]}/{parts[2]}",
+                       input_type='region', GRCh37=GRCh37, refseq=False)
+        elif len(parts) == 4:
+            vep_resp = vep(f"{parts[0]}:{parts[1]}_{parts[2]}/{parts[3]}",
                        input_type='region', GRCh37=GRCh37, refseq=False)
         if vep_resp.ok:
             vep_info = vep_resp.json()[0]
@@ -51,8 +55,9 @@ class AddVepVariantView(APIView):
                                 transcript_consequence.get('gene_symbol'))
                             if genenames_resp.ok:
                                 gene_info = genenames_resp.json()
-                                gene.annotations = gene_info['response']['docs'][0]
-                                gene.save()
+                                if len(gene_info['response']['docs']) > 0:
+                                    gene.annotations = gene_info['response']['docs'][0]
+                                    gene.save()
                         _transcript_name, found = transcript_name(
                             transcript_consequence)
                         if found:

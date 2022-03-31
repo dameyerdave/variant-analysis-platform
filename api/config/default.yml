@@ -1,0 +1,39 @@
+---
+variant:
+  fields:
+    - assembly
+    - chromosome
+    - start
+    - end
+    - allele_string:
+        format: vep_allele_string
+    - strand:
+        format: vep_strand
+    - most_severe_consequence:
+        label: Impact
+    - variant_type
+    - extra__transcript_names:
+        label: Transcripts
+transcript:
+  fields:
+    - name
+    - gene
+    - hgvsg
+    - hgvsc
+    - hgvsp
+    - ensembl_id
+    - annotations__refseq_transcript_ids:
+        label: refseq_id
+    - annotations__consequence_terms:
+        label: consequence
+    - annotations__impact:
+    - annotations__biotype:
+gene:
+  fields:
+    - symbol
+    - annotations__alias_symbol:
+        label: aliases
+    - annotations__prev_symbol:
+        label: prevs
+    - annotations__mane_select:
+        label: mane

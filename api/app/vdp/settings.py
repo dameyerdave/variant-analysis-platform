@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django_mkdocs',
     'phonenumber_field',
     'export_app',
+    'drf_multiple_model',
     'drf_auto_endpoint',
     'vdp',
     'core',
@@ -221,3 +222,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 # CSRF configuration
 CSRF_TRUSTED_ORIGINS = environ.get('DJANGO_CSRF_TRUSTED_ORIGINS').split(',')
+
+# Config API
+CONFIG_DIR = '/config'
+
