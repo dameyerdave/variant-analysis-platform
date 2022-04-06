@@ -5,16 +5,47 @@ from django.forms import CharField
 from core.lookup import lookup
 from django.contrib.postgres.fields import ArrayField
 from phonenumber_field.modelfields import PhoneNumberField
+from django.utils import timezone as tz
+from simple_history.models import HistoricalRecords
 
+class TimeTrackedModel(models.Model):
+    created_on = models.DateTimeField(default=tz.now)
 
-class Gene(models.Model):
+    class Meta:
+        abstract = True
+
+class AnnotationModel(models.Model):
+    annotations = models.JSONField(null=True)
+    custom_annotations = models.JSONField(null=True)
+
+    class Meta:
+        abstract = True
+        
+class Evidence(AnnotationModel):
+    related_name='evidences'
+
+    reference = models.TextField()
+    source = models.CharField(
+        max_length=lookup.evidence_source.max_length, 
+        choices=lookup.evidence_source.choices, 
+        default=lookup.evidence_source.default
+    )
+    title = models.TextField()
+    summary = models.TextField()
+    evidence_date = models.DateTimeField()
+
+class Gene(AnnotationModel):
     """ The gene model including flexible annotations """
     symbol = models.CharField(max_length=20, unique=True)
     ensembl_id = models.CharField(max_length=15, null=True)
-    annotations = models.JSONField(null=True)
+
+    history = HistoricalRecords(inherit = True)
 
     def __str__(self):
         return self.symbol
+
+    class Meta:
+        ordering = ['symbol']
 
 
 class VariantConsequence(models.Model):
@@ -29,8 +60,11 @@ class VariantConsequence(models.Model):
     def __str__(self):
         return self.term
 
+    class Meta:
+        ordering = ['term']
 
-class Variant(models.Model):
+
+class Variant(AnnotationModel):
     """ The variant model """
     related_name = 'variants'
 
@@ -50,6 +84,8 @@ class Variant(models.Model):
     variant_type = models.CharField(
         max_length=lookup.variant_type.max_length, choices=lookup.variant_type.choices)
 
+    history = HistoricalRecords(inherit = True)
+
     def __str__(self):
         return f"{self.assembly}: {self.chromosome}_{self.start}_{self.allele_string}"
 
@@ -60,8 +96,12 @@ class Variant(models.Model):
             'transcript_names': list(map(lambda t: t.name, self.transcripts.all()))
         }
 
+    class Meta:
+        unique_together = ('chromosome', 'start', 'end', 'allele_string')
+        ordering = ['chromosome', 'start']
 
-class Transcript(models.Model):
+
+class Transcript(AnnotationModel):
     """ The transcript model including flexible annotations """
     related_name = 'transcripts'
 
@@ -75,8 +115,12 @@ class Transcript(models.Model):
     variant = models.ForeignKey(Variant, related_name=related_name, on_delete=models.CASCADE)
     gene = models.ForeignKey(
         Gene, related_name=related_name, on_delete=models.CASCADE)
+    
+    # 0 means not ranked, rank 1 is best 2 second best ...
+    # basically this could be done based on the canonical flag or any other logic
+    rank = models.PositiveIntegerField(default=0)
 
-    annotations = models.JSONField(null=True)
+    history = HistoricalRecords(inherit = True)
 
     def __str__(self):
         return f"{self.variant} | {self.ensembl_id} ({self.gene})"
@@ -93,12 +137,18 @@ class Transcript(models.Model):
             'hgvsg': self.hgvsg
         }
 
+    class Meta:
+        ordering = ['name']
 
-class Sample(models.Model):
-    related_name = 'samples'
+class TranscriptEvidence(TimeTrackedModel):
+    related_name = 'transcript_evidences'
+    
+    transcript = models.ForeignKey(Transcript, related_name=related_name, null=True, on_delete=models.SET_NULL)
+    evidence = models.ForeignKey(Evidence, related_name=related_name, null=True, on_delete=models.SET_NULL)
 
-    sample_id = models.CharField(max_length=20, primary_key=True)
-    variants = models.ManyToManyField(Variant, related_name=related_name)
+    history = HistoricalRecords(inherit = True)
+    class Meta:
+        unique_together = ('transcript', 'evidence')
 
 
 class Patient(models.Model):
@@ -118,3 +168,27 @@ class Patient(models.Model):
     phone = PhoneNumberField()
     email = models.EmailField()
 
+    class Meta:
+        ordering = ['surename']
+
+class Sample(models.Model):
+    related_name = 'samples'
+
+    patient = models.ForeignKey(Patient, related_name=related_name, null=True, on_delete=models.SET_NULL)
+
+    sample_id = models.CharField(max_length=20, primary_key=True)
+    tissue = models.CharField(max_length=lookup.tissue.max_length, choices=lookup.tissue.choices, default=lookup.tissue.default)
+
+    class Meta:
+        ordering = ['sample_id']
+
+class SampleVariant(models.Model):
+    related_name = 'sample_transcripts'
+
+    sample = models.ForeignKey(Sample, related_name=related_name, on_delete=models.CASCADE)
+    variant = models.ForeignKey(Variant, related_name=related_name, on_delete=models.CASCADE)
+
+    # Specific fields for transcripts in samples
+    zygosity = models.CharField(max_length=lookup.zygosity.max_length, choices=lookup.zygosity.choices, default=lookup.zygosity.default)
+
+    history = HistoricalRecords(inherit = True)

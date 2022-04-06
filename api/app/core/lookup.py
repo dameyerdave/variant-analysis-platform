@@ -9,8 +9,9 @@ class DD(dict):
 
 
 class Lookup():
-    def __init__(self, choices: list, alias_choices: dict = None, validator: Callable = lambda v: True, clean: Callable = lambda v: v):
+    def __init__(self, choices: list, default: str=None, alias_choices: dict = None, validator: Callable = lambda v: True, clean: Callable = lambda v: v):
         self.__choices = self.__make_touples(choices)
+        self.__default = default
         self.__alias_choices = alias_choices
         self.__validator = validator
         self.__clean = clean
@@ -25,6 +26,10 @@ class Lookup():
     @property
     def choices(self):
         return self.__choices
+
+    @property
+    def default(self):
+        return self.__default
 
     @property
     def alias_choices(self):
@@ -64,5 +69,17 @@ lookup = DD({
     'variant_type': Lookup(
         # the following list need to be adjusted to Ensembl
         choices=['SNV', 'CNV', 'DEL']
+    ),
+    'evidence_source': Lookup(
+        choices=['Unknown', 'Pubmed', 'GoogleScholar', 'Internet', 'Internal'],
+        default='Unknown'
+    ),
+    'zygosity': Lookup(
+        choices=['Unknown', 'Homozygous', 'Heterozygous', 'Hemizygous', 'Homoplasmic', 'Heteroplasmic'],
+        default='Unknown'
+    ),
+    'tissue': Lookup(
+        choices=['unknown', 'blood', 'hair', 'skin', 'amniotic fluid', 'inside surface of the cheek'],
+        default='unknown'
     )
 })

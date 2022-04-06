@@ -1,4 +1,6 @@
 ---
+options:
+  na_string: "."
 variant:
   fields:
     - assembly
@@ -9,11 +11,13 @@ variant:
         format: vep_allele_string
     - strand:
         format: vep_strand
-    - most_severe_consequence:
-        label: Impact
+    - extra__most_severe_consequence:
+        label: Consequence
     - variant_type
     - extra__transcript_names:
         label: Transcripts
+  search_fields:
+    - most_severe_consequence__term
 transcript:
   fields:
     - name
@@ -28,6 +32,12 @@ transcript:
         label: consequence
     - annotations__impact:
     - annotations__biotype:
+  search_fields:
+    - gene__symbol
+    - name
+    - ensembl_id
+    - hgvsc
+    - hgvsp
 gene:
   fields:
     - symbol
@@ -37,3 +47,8 @@ gene:
         label: prevs
     - annotations__mane_select:
         label: mane
+  search_fields:
+    - symbol
+    - ensembl_id
+    - annotations__alias_symbol
+    - annotations__prev_symbol
