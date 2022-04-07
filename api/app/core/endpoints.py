@@ -30,13 +30,11 @@ class VariantEndpoint(DefaultEndpoint):
     model = Variant
     base_serializer = VariantSerializer
     filter_fields = ['transcripts__id', 'transcripts__name']
-    search_fields = ['transcripts__name']
 
 @register
 class GeneEndpoint(DefaultEndpoint):
     model = Gene
     filter_fields = ['symbol', 'transcripts__id', 'transcripts__name']
-    search_fields = ['symbol']
     extra_fields = []
 
 
@@ -44,14 +42,12 @@ class GeneEndpoint(DefaultEndpoint):
 class TranscriptEndpoint(DefaultEndpoint):
     model = Transcript
     filter_fields = ['gene', 'variant__id']
-    search_fields = ['name']
 
 
 @register
 class VariantConsequenceEndpoint(DefaultEndpoint):
     model = VariantConsequence
     filter_fields = ['term']
-    search_fields = ['term', 'hr_term', 'accession']
 
 @register
 class EvidenceEndpoint(DefaultEndpoint):
@@ -76,7 +72,7 @@ class SampleVariantEndpoint(DefaultEndpoint):
 class SearchViewSet(ObjectMultipleModelAPIViewSet):
     def get_querylist(self):
         try:
-            config = Config().config
+            config = Config().current
             query = self.request.GET.get('q')    
             if query:
                 # Generate the predicates from the config

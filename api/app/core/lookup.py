@@ -81,5 +81,8 @@ lookup = DD({
     'tissue': Lookup(
         choices=['unknown', 'blood', 'hair', 'skin', 'amniotic fluid', 'inside surface of the cheek'],
         default='unknown'
+    ),
+    'inheritance_mode': Lookup(
+        choices=['AD', 'AR', 'DD', 'DR' 'MD', 'MR', 'XD', 'XR']
     )
 })

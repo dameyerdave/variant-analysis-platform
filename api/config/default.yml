@@ -14,9 +14,13 @@ variant:
     - extra__most_severe_consequence:
         label: Consequence
     - variant_type
+    - extra__gene_names:
+        label: Genes
     - extra__transcript_names:
         label: Transcripts
   search_fields:
+    - transcripts__name
+    - transcripts__gene__symbol
     - most_severe_consequence__term
 transcript:
   fields:

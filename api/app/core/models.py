@@ -1,5 +1,6 @@
 from __future__ import annotations
 from django.db import models
+from django.db.models import F
 from django.core import validators
 from django.forms import CharField
 from core.lookup import lookup
@@ -93,7 +94,8 @@ class Variant(AnnotationModel):
     def extra(self):
         return {
             'most_severe_consequence': self.most_severe_consequence.hr_term,
-            'transcript_names': list(map(lambda t: t.name, self.transcripts.all()))
+            'transcript_names': list(map(lambda t: t.name, self.transcripts.all())),
+            'gene_names': set(list(map(lambda g: g['gene__symbol'], self.transcripts.all().values('gene__symbol'))))
         }
 
     class Meta:
@@ -192,3 +194,8 @@ class SampleVariant(models.Model):
     zygosity = models.CharField(max_length=lookup.zygosity.max_length, choices=lookup.zygosity.choices, default=lookup.zygosity.default)
 
     history = HistoricalRecords(inherit = True)
+
+class Phenotype(AnnotationModel):
+    gene = models.ForeignKey(Gene, null=True, on_delete=models.SET_NULL)
+    phenotype = models.TextField()
+    inheritance_mode = models.CharField(max_length=lookup.inheritance_mode.max_length, choices=lookup.inheritance_mode.choices)

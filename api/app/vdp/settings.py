@@ -179,7 +179,8 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated'
     ],
     'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend'
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'core.backends.DynamicSearchFilter'
     ],
     # 'DEFAULT_METADATA_CLASS': 'meta.serializers.APIMetadata',
     'DEFAULT_METADATA_CLASS': 'drf_auto_endpoint.metadata.AutoMetadata',
