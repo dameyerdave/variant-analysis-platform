@@ -8,9 +8,26 @@ from django.contrib.postgres.fields import ArrayField
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils import timezone as tz
 from simple_history.models import HistoricalRecords
+from config.config import Config
+from core.helpers import q_from_config
+
+class FilterManager(models.Manager):
+    def filtered(self, filter):
+        if not filter:
+            # We set the default filter
+            filter = 'default'
+        config = Config().as_dict()
+        model_name = self.model.__name__.lower()
+        print('model_name', model_name)
+        if model_name in config and 'filters' in config[model_name] and filter in config[model_name]['filters']:
+            _filter = q_from_config(config[model_name]['filters'][filter])
+            print('_filter', _filter)
+            return super().get_queryset().filter(_filter).distinct()
+        else:
+            return super().get_queryset().all()
 
 class TimeTrackedModel(models.Model):
-    created_on = models.DateTimeField(default=tz.now)
+    created_at = models.DateTimeField(default=tz.now)
 
     class Meta:
         abstract = True
@@ -41,6 +58,7 @@ class Gene(AnnotationModel):
     ensembl_id = models.CharField(max_length=15, null=True)
 
     history = HistoricalRecords(inherit = True)
+    objects = FilterManager()
 
     def __str__(self):
         return self.symbol
@@ -86,6 +104,7 @@ class Variant(AnnotationModel):
         max_length=lookup.variant_type.max_length, choices=lookup.variant_type.choices)
 
     history = HistoricalRecords(inherit = True)
+    objects = FilterManager()
 
     def __str__(self):
         return f"{self.assembly}: {self.chromosome}_{self.start}_{self.allele_string}"
@@ -123,6 +142,7 @@ class Transcript(AnnotationModel):
     rank = models.PositiveIntegerField(default=0)
 
     history = HistoricalRecords(inherit = True)
+    objects = FilterManager()
 
     def __str__(self):
         return f"{self.variant} | {self.ensembl_id} ({self.gene})"
@@ -149,6 +169,8 @@ class TranscriptEvidence(TimeTrackedModel):
     evidence = models.ForeignKey(Evidence, related_name=related_name, null=True, on_delete=models.SET_NULL)
 
     history = HistoricalRecords(inherit = True)
+    objects = FilterManager()
+
     class Meta:
         unique_together = ('transcript', 'evidence')
 
@@ -170,32 +192,48 @@ class Patient(models.Model):
     phone = PhoneNumberField()
     email = models.EmailField()
 
+    history = HistoricalRecords(inherit = True)
+    objects = FilterManager()
+
     class Meta:
         ordering = ['surename']
 
 class Sample(models.Model):
     related_name = 'samples'
 
+    id = models.CharField(max_length=20, primary_key=True)
     patient = models.ForeignKey(Patient, related_name=related_name, null=True, on_delete=models.SET_NULL)
 
-    sample_id = models.CharField(max_length=20, primary_key=True)
     tissue = models.CharField(max_length=lookup.tissue.max_length, choices=lookup.tissue.choices, default=lookup.tissue.default)
 
+    history = HistoricalRecords(inherit = True)
+    objects = FilterManager()
     class Meta:
-        ordering = ['sample_id']
+        ordering = ['id']
 
 class SampleVariant(models.Model):
-    related_name = 'sample_transcripts'
+    related_name = 'sample_variants'
 
     sample = models.ForeignKey(Sample, related_name=related_name, on_delete=models.CASCADE)
     variant = models.ForeignKey(Variant, related_name=related_name, on_delete=models.CASCADE)
 
-    # Specific fields for transcripts in samples
+    # Specific fields for variants in samples
     zygosity = models.CharField(max_length=lookup.zygosity.max_length, choices=lookup.zygosity.choices, default=lookup.zygosity.default)
 
     history = HistoricalRecords(inherit = True)
+    objects = FilterManager()
+
+    class Meta:
+        ordering = ['sample__id']
+        unique_together = ['sample', 'variant']
 
 class Phenotype(AnnotationModel):
     gene = models.ForeignKey(Gene, null=True, on_delete=models.SET_NULL)
     phenotype = models.TextField()
     inheritance_mode = models.CharField(max_length=lookup.inheritance_mode.max_length, choices=lookup.inheritance_mode.choices)
+
+    history = HistoricalRecords(inherit = True)
+    objects = FilterManager()
+
+    class Meta:
+        ordering = ['phenotype']

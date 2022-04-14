@@ -83,6 +83,6 @@ lookup = DD({
         default='unknown'
     ),
     'inheritance_mode': Lookup(
-        choices=['AD', 'AR', 'DD', 'DR' 'MD', 'MR', 'XD', 'XR']
+        choices=['AD', 'AR', 'DD', 'DR', 'MD', 'MR', 'XD', 'XR']
     )
 })

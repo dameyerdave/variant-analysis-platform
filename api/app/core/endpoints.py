@@ -2,16 +2,13 @@ from drf_auto_endpoint.endpoints import Endpoint
 from drf_auto_endpoint.router import register, router
 from drf_auto_endpoint.factories import serializer_factory
 from simplejson import load
-from core.models import (Variant, Gene, Transcript, VariantConsequence, Evidence, TranscriptEvidence, Patient, Sample, SampleVariant)
-from rest_framework.response import Response
-from rest_framework import status
-from core.serializers import VariantSerializer
+from core.models import (Variant, Gene, Transcript, VariantConsequence, Evidence, TranscriptEvidence, Patient, Sample, SampleVariant, Phenotype)
+from core.serializers import ExpandedVariantSerializer, ExpandedSampleVariantSerializer
 from drf_multiple_model.viewsets import ObjectMultipleModelAPIViewSet
-from django.db.models import Q
 from config.config import Config, ConfigFileNotFoundException
 from core.helpers import q_or_list
-
-
+from core.views import DefaultViewSet
+from django.db.models import Prefetch
 
 class DefaultEndpoint(Endpoint):
     include_str = False
@@ -24,11 +21,10 @@ class DefaultEndpoint(Endpoint):
 
         return '{}'.format(self.model_name.replace('_', '-'))
 
-
 @register
 class VariantEndpoint(DefaultEndpoint):
     model = Variant
-    base_serializer = VariantSerializer
+    base_viewset = DefaultViewSet.build(model=model, serializer=ExpandedVariantSerializer, prefetch_related=['transcripts'])
     filter_fields = ['transcripts__id', 'transcripts__name']
 
 @register
@@ -37,10 +33,13 @@ class GeneEndpoint(DefaultEndpoint):
     filter_fields = ['symbol', 'transcripts__id', 'transcripts__name']
     extra_fields = []
 
+    base_viewset = DefaultViewSet.build(model=model)
+
 
 @register
 class TranscriptEndpoint(DefaultEndpoint):
     model = Transcript
+    base_viewset = DefaultViewSet.build(model=model)
     filter_fields = ['gene', 'variant__id']
 
 
@@ -68,6 +67,13 @@ class SampleEndpoint(DefaultEndpoint):
 @register
 class SampleVariantEndpoint(DefaultEndpoint):
     model = SampleVariant
+    base_viewset = DefaultViewSet.build(model=model, serializer=ExpandedSampleVariantSerializer, prefetch_related=['sample', 'variant', 'variant__transcripts'])
+        
+    filter_fields = ['sample__id', 'variant__transcripts__gene__symbol']
+
+@register
+class PhenotypeEndpoint(DefaultEndpoint):
+    model = Phenotype
 
 class SearchViewSet(ObjectMultipleModelAPIViewSet):
     def get_querylist(self):

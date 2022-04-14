@@ -22,10 +22,16 @@ variant:
     - transcripts__name
     - transcripts__gene__symbol
     - most_severe_consequence__term
+  filters:
+    default:
+      and:
+        # only show variants that have transcripts associated
+        - transcripts__isnull: false
 transcript:
   fields:
     - name
-    - gene
+    - extra__gene:
+        label: gene
     - hgvsg
     - hgvsc
     - hgvsp
@@ -42,6 +48,24 @@ transcript:
     - ensembl_id
     - hgvsc
     - hgvsp
+  filters:
+    default:
+      and:
+        # we show only protein_coding transcripts
+        - annotations__biotype: protein_coding
+  custom_annotations:
+    - id: analyze
+      label: label.analyze
+      type: Boolean
+    - id: comment
+      label: label.comment
+      type: String
+    - id: priority
+      type: Select
+      options:
+        - { value: high, label: High }
+        - { value: medium, label: Medium }
+        - { value: low, label: Low }
 gene:
   fields:
     - symbol
@@ -56,3 +80,13 @@ gene:
     - ensembl_id
     - annotations__alias_symbol
     - annotations__prev_symbol
+samplevariant:
+  fields:
+    - sample
+    - variant
+    - zygosity
+  # filters:
+  #   default:
+  #     and:
+  #       # we show only protein_coding transcripts
+  #       - variant__transcripts__annotations__biotype: protein_coding
