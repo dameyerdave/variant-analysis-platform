@@ -51,7 +51,25 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
 
   def as_dict(self):
     return self.config
+
+  def get_filter(self, _type: str, _filter: str):
+    """ returns the filter object of a specific type """
+    if not _type in self.config:
+        return None
+    if not 'filters' in self.config[_type]:
+        return None
+    if not _filter in self.config[_type]['filters']:
+        return None
+    return self.config[_type]['filters'][_filter]
   
+  def get_ordering(self, _type: str):
+    """ returns the ordering of a specific type """
+    if not _type in self.config:
+        return None
+    if not 'ordering' in self.config[_type]:
+        return None
+    return self.config[_type]['ordering']
+
   @property
   def current(self):
     return DotConfig(self.config)

@@ -18,10 +18,10 @@ class FilterManager(models.Manager):
             filter = 'default'
         config = Config().as_dict()
         model_name = self.model.__name__.lower()
-        print('model_name', model_name)
+        # print('FilterManager: model_name', model_name)
         if model_name in config and 'filters' in config[model_name] and filter in config[model_name]['filters']:
             _filter = q_from_config(config[model_name]['filters'][filter])
-            print('_filter', _filter)
+            # print('_filter', _filter)
             return super().get_queryset().filter(_filter).distinct()
         else:
             return super().get_queryset().all()
@@ -112,14 +112,11 @@ class Variant(AnnotationModel):
     @property
     def extra(self):
         return {
-            'most_severe_consequence': self.most_severe_consequence.hr_term,
-            'transcript_names': list(map(lambda t: t.name, self.transcripts.all())),
-            'gene_names': set(list(map(lambda g: g['gene__symbol'], self.transcripts.all().values('gene__symbol'))))
+            'most_severe_consequence': self.most_severe_consequence.hr_term
         }
 
     class Meta:
         unique_together = ('chromosome', 'start', 'end', 'allele_string')
-        ordering = ['chromosome', 'start']
 
 
 class Transcript(AnnotationModel):
@@ -159,9 +156,6 @@ class Transcript(AnnotationModel):
             'hgvsg': self.hgvsg
         }
 
-    class Meta:
-        ordering = ['name']
-
 class TranscriptEvidence(TimeTrackedModel):
     related_name = 'transcript_evidences'
     
@@ -195,9 +189,6 @@ class Patient(models.Model):
     history = HistoricalRecords(inherit = True)
     objects = FilterManager()
 
-    class Meta:
-        ordering = ['surename']
-
 class Sample(models.Model):
     related_name = 'samples'
 
@@ -208,8 +199,6 @@ class Sample(models.Model):
 
     history = HistoricalRecords(inherit = True)
     objects = FilterManager()
-    class Meta:
-        ordering = ['id']
 
 class SampleVariant(models.Model):
     related_name = 'sample_variants'
@@ -224,7 +213,6 @@ class SampleVariant(models.Model):
     objects = FilterManager()
 
     class Meta:
-        ordering = ['sample__id']
         unique_together = ['sample', 'variant']
 
 class Phenotype(AnnotationModel):
@@ -234,6 +222,3 @@ class Phenotype(AnnotationModel):
 
     history = HistoricalRecords(inherit = True)
     objects = FilterManager()
-
-    class Meta:
-        ordering = ['phenotype']

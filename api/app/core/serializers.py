@@ -1,32 +1,25 @@
 from rest_framework import serializers
 from core.lookup import lookup
-from core.models import Variant, Sample, Transcript, SampleVariant
-from core.helpers import q_from_config
-from config.config import Config
-
-
-class FilteredListSerializer(serializers.ListSerializer):
-    def to_representation(self, data):
-        # We filter nested serializers in representation
-        filter = self.context['request'].query_params.get('filter')
-        if not filter:
-            # We set the default filter
-            filter = 'default'
-        config = Config().as_dict()
-        model_name = data.model.__name__.lower()
-        if model_name in config and 'filters' in config[model_name] and filter in config[model_name]['filters']:
-            _filter = q_from_config(config[model_name]['filters'][filter])
-            print('_filter', _filter)
-            data = data.filter(_filter)
-        return super().to_representation(data)
+from core.models import Variant, Sample, Transcript, SampleVariant, Gene
 
 class SampleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sample
         fields = '__all__'
 
+class GeneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Gene
+        fields = '__all__'
+
+class TranscriptSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transcript
+        fields = '__all__'
+
 class VariantSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
+        # To support different names for the same assembly
         _mutable = data._mutable
         data._mutable = True
         data['assembly'] = lookup.assembly.normalize(data['assembly'])
@@ -36,19 +29,38 @@ class VariantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Variant
         fields = '__all__'
+        
 
-class TranscriptSerializer(serializers.ModelSerializer):
+###
+# Expanded readonly serializers
+###
+
+class ReadOnlyModelSerializer(serializers.ModelSerializer):
+    def get_fields(self, *args, **kwargs):
+        fields = super().get_fields(*args, **kwargs)
+        for field in fields:
+            fields[field].read_only = True
+        return fields
+
+class ExpandTranscriptSerializer(ReadOnlyModelSerializer):
+    gene = GeneSerializer()
+
     class Meta:
         model = Transcript
-        list_serializer_class = FilteredListSerializer
         fields = '__all__'
 
-class ExpandedVariantSerializer(VariantSerializer):
-    transcripts = TranscriptSerializer(many=True)
+class ExpandVariantSerializer(ReadOnlyModelSerializer):
+    transcripts = ExpandTranscriptSerializer(many=True)
+    transcript_names = serializers.ReadOnlyField()
+    gene_names = serializers.ReadOnlyField()
 
-class ExpandedSampleVariantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Variant
+        fields = '__all__'
+
+class ExpandSampleVariantSerializer(ReadOnlyModelSerializer):
     sample = SampleSerializer()
-    variant = ExpandedVariantSerializer()
+    variant = ExpandVariantSerializer()
 
     class Meta:
         model = SampleVariant
