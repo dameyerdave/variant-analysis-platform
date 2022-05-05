@@ -1,5 +1,5 @@
 """
-WSGI config for vdp project.
+WSGI config for vap project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'vdp.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'vap.settings')
 
 application = get_wsgi_application()

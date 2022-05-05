@@ -19,7 +19,7 @@ RUN pip --disable-pip-version-check install --upgrade pip
 RUN pip install -r /requirements.txt
 RUN apk del .tmp-build-deps
 
-COPY ./app /app
+# COPY ./app /app
 WORKDIR /app
 
 RUN mkdir -p /vol/web/media

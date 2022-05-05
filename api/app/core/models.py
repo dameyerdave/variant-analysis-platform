@@ -1,10 +1,10 @@
 from __future__ import annotations
 from django.db import models
-from django.db.models import F
+from django.db.models import Q
+from django.contrib.postgres.aggregates import BoolAnd
 from django.core import validators
 from django.forms import CharField
 from core.lookup import lookup
-from django.contrib.postgres.fields import ArrayField
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils import timezone as tz
 from simple_history.models import HistoricalRecords
@@ -12,27 +12,48 @@ from config.config import Config
 from core.helpers import q_from_config
 
 class FilterManager(models.Manager):
-    def filtered(self, filter):
-        if not filter:
-            # We set the default filter
-            filter = 'default'
+    def filtered(self, _filter = None, ordering = None, flags = True):
         config = Config().as_dict()
         model_name = self.model.__name__.lower()
-        # print('FilterManager: model_name', model_name)
-        if model_name in config and 'filters' in config[model_name] and filter in config[model_name]['filters']:
-            _filter = q_from_config(config[model_name]['filters'][filter])
-            # print('_filter', _filter)
-            return super().get_queryset().filter(_filter).distinct()
+
+        # Apply filters
+        if _filter:
+            if model_name in config and 'filters' in config[model_name] and _filter in config[model_name]['filters']:
+                filter = q_from_config(config[model_name]['filters'][_filter])
+                qs = super().get_queryset().filter(filter).distinct()
+            else:
+                # in case there is no filter defined in the config return all objects
+                qs = super().get_queryset().all()
         else:
-            return super().get_queryset().all()
+            # in case there is no filter defined in the request params return all objects
+            qs = super().get_queryset().all()
+
+        # Annotate flags
+        if flags:
+            if model_name in config and 'flags' in config[model_name]:
+                flags = config[model_name]['flags']
+                for flag, flag_definition in flags.items():
+                    rule = q_from_config(flag_definition['rule'])
+                    qs = qs.annotate(**{f"flag__{flag}": BoolAnd(rule)})
+
+        # Order the queryset
+        if ordering:
+            qs = qs.order_by(*ordering)
+
+        return qs
 
 class TimeTrackedModel(models.Model):
+    """ 
+    A timetracked model. Supports a created_at property 
+    containing the timestamp of the creation time. 
+    """
     created_at = models.DateTimeField(default=tz.now)
 
     class Meta:
         abstract = True
 
 class AnnotationModel(models.Model):
+    """ A model that supports annotations, custom_annotations and flags """
     annotations = models.JSONField(null=True)
     custom_annotations = models.JSONField(null=True)
 
@@ -56,15 +77,13 @@ class Gene(AnnotationModel):
     """ The gene model including flexible annotations """
     symbol = models.CharField(max_length=20, unique=True)
     ensembl_id = models.CharField(max_length=15, null=True)
+    entrez_id = models.IntegerField(null=True)
 
     history = HistoricalRecords(inherit = True)
     objects = FilterManager()
 
     def __str__(self):
         return self.symbol
-
-    class Meta:
-        ordering = ['symbol']
 
 
 class VariantConsequence(models.Model):
@@ -79,8 +98,6 @@ class VariantConsequence(models.Model):
     def __str__(self):
         return self.term
 
-    class Meta:
-        ordering = ['term']
 
 
 class Variant(AnnotationModel):
@@ -96,7 +113,7 @@ class Variant(AnnotationModel):
     allele_string = models.TextField()
 
     strand = models.CharField(
-        max_length=lookup.strand.max_length, choices=lookup.strand.choices)
+        max_length=lookup.strand.max_length, choices=lookup.strand.choices, null=True)
     most_severe_consequence = models.ForeignKey(
         VariantConsequence, related_name=related_name, null=True, on_delete=models.SET_NULL)
 
@@ -130,13 +147,8 @@ class Transcript(AnnotationModel):
     hgvsc = models.TextField(null=True)
     hgvsp = models.TextField(null=True)
 
-    variant = models.ForeignKey(Variant, related_name=related_name, on_delete=models.CASCADE)
     gene = models.ForeignKey(
         Gene, related_name=related_name, on_delete=models.CASCADE)
-    
-    # 0 means not ranked, rank 1 is best 2 second best ...
-    # basically this could be done based on the canonical flag or any other logic
-    rank = models.PositiveIntegerField(default=0)
 
     history = HistoricalRecords(inherit = True)
     objects = FilterManager()
@@ -155,6 +167,15 @@ class Transcript(AnnotationModel):
             'gene': str(self.gene),
             'hgvsg': self.hgvsg
         }
+
+class VariantTranscript(models.Model):
+    related_name='variant_transcripts'
+    variant = models.ForeignKey(Variant, related_name=related_name, on_delete=models.CASCADE)
+    transcript = models.ForeignKey(Transcript, related_name=related_name, on_delete=models.CASCADE)
+
+    # 0 means not ranked, rank 1 is best 2 second best ...
+    # basically this could be done based on the canonical flag or any other logic
+    rank = models.PositiveIntegerField(default=0)
 
 class TranscriptEvidence(TimeTrackedModel):
     related_name = 'transcript_evidences'
@@ -200,13 +221,13 @@ class Sample(models.Model):
     history = HistoricalRecords(inherit = True)
     objects = FilterManager()
 
-class SampleVariant(models.Model):
+class SampleVariant(AnnotationModel):
     related_name = 'sample_variants'
 
     sample = models.ForeignKey(Sample, related_name=related_name, on_delete=models.CASCADE)
     variant = models.ForeignKey(Variant, related_name=related_name, on_delete=models.CASCADE)
 
-    # Specific fields for variants in samples
+    # # Specific fields for variants in samples
     zygosity = models.CharField(max_length=lookup.zygosity.max_length, choices=lookup.zygosity.choices, default=lookup.zygosity.default)
 
     history = HistoricalRecords(inherit = True)

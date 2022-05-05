@@ -6,7 +6,7 @@ autopep8==1.6.0
 backcall==0.2.0
 beautifulsoup4==4.10.0
 biocommons.seqrepo==0.6.5
-bioinfo-toolset @ git+https://github.com/dameyerdave/bioinfo-toolset.git@1bb939f002f038d01ba95b6c3fd93ff4a74d45c4
+bioinfo-toolset @ git+https://github.com/dameyerdave/bioinfo-toolset.git@master
 biopython==1.79
 bioutils==0.5.5
 bs4==0.0.1

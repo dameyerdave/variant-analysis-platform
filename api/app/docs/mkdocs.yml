@@ -1,4 +1,4 @@
-site_name: vdp Documentation
+site_name: VAP Documentation
 use_directory_urls: false
 docs_dir: docs
 site_dir: site

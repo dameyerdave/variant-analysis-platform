@@ -13,6 +13,7 @@ ENV PATH="$PATH:/app/node_modules/.bin"
 
 COPY ./app /app
 WORKDIR /app
+
 RUN npm install -g npm@latest
 RUN yarn global add vite
 RUN yarn install

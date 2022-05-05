@@ -20,9 +20,12 @@ services:
     hostname: api
     restart: unless-stopped
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./api/app:/app
       - ./api/config:/config
+      - ./api/modules:/modules
       - ./.git:/.git
+      - ./data:/data
     environment:
       - POSTGRES_HOST=db
     env_file: .env
@@ -42,3 +45,9 @@ services:
     hostname: db
     restart: unless-stopped
     env_file: .env
+  vep_rest:
+    image: dameyerdave/vep-offline-rest
+    volumes:
+      - "${HOME}/vep_data:/opt/vep/.vep"
+    ports:
+      - "5005:5005"

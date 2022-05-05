@@ -9,7 +9,13 @@ services:
     ports:
       - "8071:8071"
     command: >
-      sh -c "yarn dev --host 0.0.0.0 --port 8071"
+      sh -c " \
+        npm install -g npm@latest && \
+        yarn global add vite && \
+        yarn install && \
+        npx browserslist@latest --update-db && \
+        yarn dev --host 0.0.0.0 --port 8071 \
+      "
   api:
     ports:
       - "5071:5000"

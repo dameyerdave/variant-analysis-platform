@@ -20,6 +20,7 @@ class DefaultViewSet(viewsets.ModelViewSet):
               serializer = kwargs['expand_serializer']
           else:
               serializer = super().get_serializer_class()
+
           return serializer
 
         def __get_prefetch(self, prefetch, _filter):
@@ -34,11 +35,17 @@ class DefaultViewSet(viewsets.ModelViewSet):
           else:
               return Prefetch(prefetch['property'], prefetch['model'].objects.filtered(_filter))
 
+
         def get_queryset(self):
           """ Returns a queryset based on the filter and the prefetch definition. """
           config = Config()
-          _filter = self.request.query_params.get('filter', 'default')
-          qs = self.model.objects.filtered(_filter)
+          
+          # Get filtered queryset
+          _filter = self.request.query_params.get('filter', None)
+          ordering = config.get_ordering(self.model.__name__.lower())
+          qs = self.model.objects.filtered(_filter, ordering)
+          
+          # Expand
           if parse_bool(self.request.query_params.get('expand')):
               if 'prefetch' in kwargs:
                 prefetches = []
@@ -47,12 +54,12 @@ class DefaultViewSet(viewsets.ModelViewSet):
                 qs = qs.prefetch_related(*prefetches)
               if 'related' in kwargs:
                 qs = qs.select_related(*kwargs['related'])
+
+          # Run the individual queryset_extra function
           if 'queryset_extra' in kwargs:
               # If there is a queryset_extra function we run this before returning it
               qs = kwargs['queryset_extra'](qs, _filter)
-          ordering = config.get_ordering(self.model.__name__.lower())
-          if ordering:
-            qs = qs.order_by(*ordering)
+
           return qs
 
       return _DefaultViewSet

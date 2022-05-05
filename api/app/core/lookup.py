@@ -75,7 +75,7 @@ lookup = DD({
         default='Unknown'
     ),
     'zygosity': Lookup(
-        choices=['Unknown', 'Homozygous', 'Heterozygous', 'Hemizygous', 'Homoplasmic', 'Heteroplasmic'],
+        choices=['Unknown', 'Homozygous', 'Heterozygous', 'Hemizygous', 'Homoplasmic', 'Heteroplasmic', 'Zero_coverage_region'],
         default='Unknown'
     ),
     'tissue': Lookup(

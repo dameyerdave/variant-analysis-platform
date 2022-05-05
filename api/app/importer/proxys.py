@@ -3,6 +3,8 @@ import requests
 VEP_API = 'https://rest.ensembl.org'
 VEP_OLD_API = 'https://grch37.rest.ensembl.org'
 
+VEP_OFFLINE_API = 'http://vep_rest:5005'
+
 GENENAMES_API = 'http://rest.genenames.org/fetch/{}/{}'
 
 ALLELE_REGISTRY_API = 'https://reg.genome.network/allele?hgvs={}'
@@ -24,6 +26,17 @@ def vep(input, species='human', input_type='hgvs', GRCh37=False, refseq=False):
     resp = requests.get(req, headers={
         'Content-Type': 'application/json'
     }, params=params)
+
+    return resp
+
+def vep_offline(input):
+    req = f"{VEP_OFFLINE_API}?q={input}"
+
+    # print('request', req)
+
+    resp = requests.get(req, headers={
+        'Content-Type': 'application/json'
+    })
 
     return resp
 

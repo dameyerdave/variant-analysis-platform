@@ -10,7 +10,6 @@ from core.helpers import q_or_list, q_from_config
 from core.views import DefaultViewSet
 from django.contrib.postgres.aggregates import ArrayAgg
 
-
 class DefaultEndpoint(Endpoint):
     include_str = False
     extra_fields = ['extra']
@@ -21,6 +20,13 @@ class DefaultEndpoint(Endpoint):
             return self.url
 
         return '{}'.format(self.model_name.replace('_', '-'))
+
+    def get_fields_for_serializer(self):
+        """ Additionally add the configured flag fields """
+        config = Config()
+        self.fields = super().get_fields_for_serializer()
+        self.fields += config.get_flag_fields(self.model.__name__.lower())
+        return self.fields
 
 @register
 class VariantEndpoint(DefaultEndpoint):
@@ -38,7 +44,7 @@ class VariantEndpoint(DefaultEndpoint):
     base_viewset = DefaultViewSet.build(model=model, expand_serializer=ExpandVariantSerializer, prefetch=[
         {'property': 'transcripts', 'model': Transcript}
     ], queryset_extra=queryset_extra)
-    filter_fields = ['transcripts__id', 'transcripts__name']
+    filter_fields = ['transcripts__id', 'transcripts__name', 'sample_variants__sample__id']
     extra_fields = ['transcript_names', 'gene_names']
 
 @register

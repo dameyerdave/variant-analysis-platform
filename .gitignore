@@ -6,6 +6,7 @@ __pycache__
 
 # Environment configuration
 .env*
+!.env.TEMPLATE
 Pipfile*
 
 # Folders
@@ -14,6 +15,7 @@ dist
 node_modules
 *.egg-info
 api/app/docs/site
+data/**
 
 # Generated files
 CHANGELOG.md

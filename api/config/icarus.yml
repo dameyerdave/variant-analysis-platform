@@ -30,26 +30,24 @@ variant:
   ordering:
     - chromosome
     - start
-  filters:
-    default:
-      and:
-        # only show variants that have transcripts associated
-        - transcripts__isnull: false
+  # filters:
+  #   default:
+  #     and:
+  #       - assembly: "GRCh38"
 transcript:
   fields:
+    - ensembl_id
+    - rank
     - name
     - extra__gene:
         label: gene
     - hgvsg
     - hgvsc
     - hgvsp
-    - ensembl_id
-    - annotations__refseq_transcript_ids:
-        label: refseq_id
-    - annotations__consequence_terms:
-        label: consequence
-    - annotations__impact:
-    - annotations__biotype:
+    - annotations__variant_impact:
+        label: Impact
+    - annotations__clinical_significances:
+        label: Pathogenicity
   flags:
     # Defining flags needs a restart of the application
     canonical:
@@ -70,11 +68,11 @@ transcript:
     - hgvsp
   ordering:
     - name
-  filters:
-    default:
-      and:
-        # we show only protein_coding transcripts
-        - annotations__biotype: protein_coding
+  # filters:
+  #   default:
+  #     and:
+  #       # we show only protein_coding transcripts
+  #       - annotations__biotype: protein_coding
   custom_annotations:
     - id: analyze
       label: label.analyze
