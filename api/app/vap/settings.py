@@ -229,7 +229,7 @@ CSRF_TRUSTED_ORIGINS = environ.get('DJANGO_CSRF_TRUSTED_ORIGINS').split(',')
 
 # Config API
 CONFIG_DIR = '/config'
-USE_CONFIG = 'icarus'
+USE_CONFIG = 'default'
 
 # Logging
 LOGGING = {

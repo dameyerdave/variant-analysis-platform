@@ -18,12 +18,16 @@ variant:
         format: vep_strand
     - extra__most_severe_consequence:
         label: Consequence
-    - variant_type
+    - annotations__minor_allele_freq:
+        label: MAF
     - gene_names:
         label: Genes
-    - transcript_names:
-        label: Transcripts
+    - annotations__id:
+        label: IDs
+    # - transcript_names:
+    #     label: Transcripts
   search_fields:
+    - start
     - transcripts__name
     - transcripts__gene__symbol
     - most_severe_consequence__term
@@ -68,11 +72,12 @@ transcript:
     - hgvsp
   ordering:
     - name
-  # filters:
-  #   default:
-  #     and:
-  #       # we show only protein_coding transcripts
-  #       - annotations__biotype: protein_coding
+  filters:
+    # default:
+    #   and:
+    #     - rank__gt: 0
+  strategies:
+    ranking: VepRankingStrategy
   custom_annotations:
     - id: analyze
       label: label.analyze

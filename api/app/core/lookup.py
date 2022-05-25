@@ -66,10 +66,6 @@ lookup = DD({
     'variant_consequence_impact': Lookup(
         choices=['HIGH', 'MODERATE', 'MODIFIER', 'LOW']
     ),
-    'variant_type': Lookup(
-        # the following list need to be adjusted to Ensembl
-        choices=['SNV', 'CNV', 'DEL']
-    ),
     'evidence_source': Lookup(
         choices=['Unknown', 'Pubmed', 'GoogleScholar', 'Internet', 'Internal'],
         default='Unknown'

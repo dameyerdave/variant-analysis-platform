@@ -89,7 +89,7 @@ class Config(FileSystemEventHandler, metaclass=Singleton):
         return ()
     if not 'flags' in self.config[_type]:
         return ()
-    return tuple(map(lambda f: f"flag__{f}", self.config[_type]['flags'].keys()))
+    return tuple(map(lambda f: f"flag_{f}", self.config[_type]['flags'].keys()))
 
   def get_import_config(self, config: str):
     if not 'import' in self.config:

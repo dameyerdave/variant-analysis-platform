@@ -1,10 +1,9 @@
-from lib2to3.pgen2.token import EQUAL
-from django.test import TestCase
 from rest_framework.test import APITestCase
 from rest_framework import status
 
 
 class TestSerializers(APITestCase):
+    fixtures = ['variant_consequences']
     def setUp(self):
         self.default_variant = {
             "assembly": "GRCh38",
@@ -14,7 +13,7 @@ class TestSerializers(APITestCase):
             "allele_string": "A/T",
             "strand": "-",
             "most_severe_consequence": 11,  # missense_variant
-            "variant_type": "SNV"
+            "variant_class": "SNV"
         }
 
     def test_variant_serializer_normalize_assembly(self):

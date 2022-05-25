@@ -23,7 +23,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./api/app:/app
       - ./api/config:/config
-      - ./api/modules:/modules
+      - ./api/plugins:/plugins
       - ./.git:/.git
       - ./data:/data
     environment:
@@ -51,3 +51,14 @@ services:
       - "${HOME}/vep_data:/opt/vep/.vep"
     ports:
       - "5005:5005"
+  redis:
+    image: redis:7.0.0
+    hostname: redis
+    restart: unless-stopped
+
+  seqrepo:
+    image: biocommons/seqrepo-rest-service
+    hostname: seqrepo
+    volumes:
+      - "/usr/local/share/seqrepo:/usr/local/share/seqrepo"
+    restart: unless-stopped

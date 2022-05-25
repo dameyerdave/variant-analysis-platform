@@ -34,7 +34,7 @@ class FilterManager(models.Manager):
                 flags = config[model_name]['flags']
                 for flag, flag_definition in flags.items():
                     rule = q_from_config(flag_definition['rule'])
-                    qs = qs.annotate(**{f"flag__{flag}": BoolAnd(rule)})
+                    qs = qs.annotate(**{f"flag_{flag}": BoolAnd(rule)})
 
         # Order the queryset
         if ordering:
@@ -73,6 +73,12 @@ class Evidence(AnnotationModel):
     summary = models.TextField()
     evidence_date = models.DateTimeField()
 
+    history = HistoricalRecords(inherit = True)
+    objects = FilterManager()
+
+    class Meta:
+        unique_together = ('reference', 'source')
+
 class Gene(AnnotationModel):
     """ The gene model including flexible annotations """
     symbol = models.CharField(max_length=20, unique=True)
@@ -104,6 +110,8 @@ class Variant(AnnotationModel):
     """ The variant model """
     related_name = 'variants'
 
+    vrs_id = models.TextField(null=True)
+
     assembly = models.CharField(
         max_length=lookup.assembly.max_length, choices=lookup.assembly.choices)
     chromosome = models.CharField(
@@ -111,14 +119,12 @@ class Variant(AnnotationModel):
     start = models.IntegerField(help_text='The start of the variant')
     end = models.IntegerField(help_text='The end of the variant')
     allele_string = models.TextField()
+    variant_class = models.TextField(null=True, help_text='The class of the variant')
 
     strand = models.CharField(
         max_length=lookup.strand.max_length, choices=lookup.strand.choices, null=True)
     most_severe_consequence = models.ForeignKey(
         VariantConsequence, related_name=related_name, null=True, on_delete=models.SET_NULL)
-
-    variant_type = models.CharField(
-        max_length=lookup.variant_type.max_length, choices=lookup.variant_type.choices)
 
     history = HistoricalRecords(inherit = True)
     objects = FilterManager()
@@ -133,14 +139,18 @@ class Variant(AnnotationModel):
         }
 
     class Meta:
-        unique_together = ('chromosome', 'start', 'end', 'allele_string')
+        unique_together = ('assembly', 'chromosome', 'start', 'end', 'allele_string')
 
 
 class Transcript(AnnotationModel):
     """ The transcript model including flexible annotations """
     related_name = 'transcripts'
 
-    ensembl_id = models.TextField(null=True, unique=True)
+    variant=models.ForeignKey(Variant, related_name=related_name, on_delete=models.CASCADE)
+
+    ensembl_id = models.TextField(null=True)
+    refseq_id = models.TextField(null=True)
+
     name = models.TextField()
 
     hgvsg = models.TextField(null=True)
@@ -154,28 +164,16 @@ class Transcript(AnnotationModel):
     objects = FilterManager()
 
     def __str__(self):
-        return f"{self.variant} | {self.ensembl_id} ({self.gene})"
-
-    @property
-    def hgvsg(self):
-        return f"{self.variant.chromosome}:{self.variant.start}{self.variant.allele_string.replace('/', '>')}",
+        return f"{self.ensembl_id} ({self.gene})"
 
     @property
     def extra(self):
         return {
-            'variant': str(self.variant),
             'gene': str(self.gene),
-            'hgvsg': self.hgvsg
         }
 
-class VariantTranscript(models.Model):
-    related_name='variant_transcripts'
-    variant = models.ForeignKey(Variant, related_name=related_name, on_delete=models.CASCADE)
-    transcript = models.ForeignKey(Transcript, related_name=related_name, on_delete=models.CASCADE)
-
-    # 0 means not ranked, rank 1 is best 2 second best ...
-    # basically this could be done based on the canonical flag or any other logic
-    rank = models.PositiveIntegerField(default=0)
+    class Meta:
+        unique_together=('variant', 'ensembl_id')
 
 class TranscriptEvidence(TimeTrackedModel):
     related_name = 'transcript_evidences'
@@ -188,6 +186,18 @@ class TranscriptEvidence(TimeTrackedModel):
 
     class Meta:
         unique_together = ('transcript', 'evidence')
+
+class VariantEvidence(TimeTrackedModel):
+    related_name = 'variant_evidences'
+    
+    variant = models.ForeignKey(Variant, related_name=related_name, null=True, on_delete=models.SET_NULL)
+    evidence = models.ForeignKey(Evidence, related_name=related_name, null=True, on_delete=models.SET_NULL)
+
+    history = HistoricalRecords(inherit = True)
+    objects = FilterManager()
+
+    class Meta:
+        unique_together = ('variant', 'evidence')
 
 
 class Patient(models.Model):

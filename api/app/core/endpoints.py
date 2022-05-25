@@ -2,8 +2,8 @@ from drf_auto_endpoint.endpoints import Endpoint
 from drf_auto_endpoint.router import register
 from drf_auto_endpoint.factories import serializer_factory
 from core.helpers import q_from_config
-from core.models import (Variant, Gene, Transcript, VariantConsequence, Evidence, TranscriptEvidence, Patient, Sample, SampleVariant, Phenotype)
-from core.serializers import ExpandVariantSerializer, ExpandSampleVariantSerializer, ExpandTranscriptSerializer
+from core.models import (Variant, Gene, Transcript, VariantConsequence, Evidence, TranscriptEvidence, Patient, Sample, SampleVariant, Phenotype, VariantEvidence)
+from core.serializers import (ExpandVariantSerializer, ExpandSampleVariantSerializer, ExpandTranscriptSerializer, VariantSerializer, ExpandVariantEvidenceSerializer)
 from drf_multiple_model.viewsets import ObjectMultipleModelAPIViewSet
 from config.config import Config, ConfigFileNotFoundException
 from core.helpers import q_or_list, q_from_config
@@ -26,6 +26,7 @@ class DefaultEndpoint(Endpoint):
         config = Config()
         self.fields = super().get_fields_for_serializer()
         self.fields += config.get_flag_fields(self.model.__name__.lower())
+        # print('fields', self.fields)
         return self.fields
 
 @register
@@ -34,6 +35,7 @@ class VariantEndpoint(DefaultEndpoint):
         # We add the transcript names to the queryset as well as the gene names
         config = Config()
         transcript_filter = q_from_config(config.get_filter('transcript', _filter), prefix='transcripts__')
+        print('_filter', _filter)
         return qs.annotate(
                 transcript_names=ArrayAgg('transcripts__name', filter=transcript_filter)
             ).annotate(
@@ -41,11 +43,12 @@ class VariantEndpoint(DefaultEndpoint):
             )
 
     model = Variant
+    base_serializer = VariantSerializer
     base_viewset = DefaultViewSet.build(model=model, expand_serializer=ExpandVariantSerializer, prefetch=[
-        {'property': 'transcripts', 'model': Transcript}
+        { 'property': 'transcripts', 'model': Transcript, 'prefetch': { 'property': 'gene', 'model': Gene } }
     ], queryset_extra=queryset_extra)
     filter_fields = ['transcripts__id', 'transcripts__name', 'sample_variants__sample__id']
-    extra_fields = ['transcript_names', 'gene_names']
+    extra_fields = ['transcript_names', 'gene_names', 'extra']
 
 @register
 class GeneEndpoint(DefaultEndpoint):
@@ -55,13 +58,11 @@ class GeneEndpoint(DefaultEndpoint):
 
     base_viewset = DefaultViewSet.build(model=model)
 
-
 @register
 class TranscriptEndpoint(DefaultEndpoint):
     model = Transcript
     base_viewset = DefaultViewSet.build(model=model, expand_serializer=ExpandTranscriptSerializer, related=['gene'])
     filter_fields = ['gene__symbol', 'variant__id']
-
 
 @register
 class VariantConsequenceEndpoint(DefaultEndpoint):
@@ -92,6 +93,15 @@ class SampleVariantEndpoint(DefaultEndpoint):
         { 'property': 'variant', 'model': Variant, 'prefetch': { 'property': 'transcripts', 'model': Transcript }}
     ])
     filter_fields = ['sample__id', 'variant__transcripts__gene__symbol']
+
+@register
+class VariantEvidenceEndpoint(DefaultEndpoint):
+    model = VariantEvidence
+    base_viewset = DefaultViewSet.build(model=model, expand_serializer=ExpandVariantEvidenceSerializer, prefetch=[
+        { 'property': 'variant', 'model': Variant }, 
+        { 'property': 'evidence', 'model': Evidence }
+    ])
+    filter_fields = ['variant__id']
 
     
 

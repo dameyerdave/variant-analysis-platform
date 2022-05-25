@@ -8,6 +8,7 @@ sample:
     - tissue
 variant:
   fields:
+    - vrs_id
     - assembly
     - chromosome
     - start
@@ -16,14 +17,21 @@ variant:
         format: vep_allele_string
     - strand:
         format: vep_strand
+    - variant_class:
+        label: variant_class
     - extra__most_severe_consequence:
         label: Consequence
-    - variant_type
     - gene_names:
         label: Genes
-    - transcript_names:
-        label: Transcripts
+    - annotations__clin_sig:
+        label: clinical_significances
+        highlight:
+          benign: bg-green-5
+          pathogenic: bg-red-5
+    # - transcript_names:
+    #     label: Transcripts
   search_fields:
+    - start
     - transcripts__name
     - transcripts__gene__symbol
     - most_severe_consequence__term
@@ -35,6 +43,14 @@ variant:
       and:
         # only show variants that have transcripts associated
         - transcripts__isnull: false
+        - or:
+            - most_severe_consequence__term__in:
+                - missense_variant
+                - frameshift_variant
+                - stop_gained
+                - start_lost
+            - most_severe_consequence__term__startswith: splice
+            - most_severe_consequence__term__startswith: inframe
 transcript:
   fields:
     - name
@@ -48,8 +64,10 @@ transcript:
         label: refseq_id
     - annotations__consequence_terms:
         label: consequence
+        format: beautify_list
     - annotations__impact:
     - annotations__biotype:
+        format: beautify_string
   flags:
     # Defining flags needs a restart of the application
     canonical:
@@ -57,11 +75,17 @@ transcript:
         and:
           # If the transcript is canonical the canonical flag is attached
           - annotations__canonical: 1
-      icon: canonical
+      icon: favorite
     pick:
       rule:
         and:
           - annotations__pick: 1
+      icon: task_alt
+    mane:
+      rule:
+        and:
+          - annotations__mane_select__isnull: false
+      icon: star_rate
   search_fields:
     - gene__symbol
     - name
@@ -75,6 +99,8 @@ transcript:
       and:
         # we show only protein_coding transcripts
         - annotations__biotype: protein_coding
+  strategies:
+    ranking: VepRanking
   custom_annotations:
     - id: analyze
       label: label.analyze

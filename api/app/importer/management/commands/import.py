@@ -3,10 +3,9 @@ from config.config import Config
 from importer.parsers import TsvParser
 from importer.strategies import VepStrategy
 import re
-import logging
 from os.path import join
 import traceback
-logger = logging.getLogger(__name__)
+from friendlylog import colored_logger as log
 
 
 class Command(BaseCommand):
@@ -58,12 +57,12 @@ class Command(BaseCommand):
         else:
             try:
                 import importlib.util
-                spec = importlib.util.spec_from_file_location('modules.importer', join('..', 'modules', 'importer', f"{_strategy}.py"))
+                spec = importlib.util.spec_from_file_location('plugins.importer', join('..', 'plugins', 'importer', f"{_strategy}.py"))
                 importer_module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(importer_module)
                 return importer_module.ImportStrategy()
             except ImportError as ie:
-                self.stdout.write(self.style.ERROR(f"importer module {_strategy} not found."))
+                log.error(f"importer plugin {_strategy} not found.")
                 raise ie
         
 
@@ -72,7 +71,7 @@ class Command(BaseCommand):
         config = Config()
         import_config = config.get_import_config(options['config'])
         if not import_config:
-            self.stdout.write(self.style.ERROR(f"Config {config} not defined."))
+            log.error(f"Config {config} not defined.")
         try:
             parser = self.parser_map[import_config.get('format', 'tsv')]()
             strategy = self.__dynamic_strategy(import_config.get('strategy', 'vep'))
@@ -101,20 +100,20 @@ class Command(BaseCommand):
                         break
                         
                 if check:
-                    # self.stdout.write(f"Import variant: {params}")
-                    imported, _ = strategy.import_one(params)
-                    if imported:
-                        self.stdout.write(self.style.SUCCESS("Imported variant: {chr}:{start}{ref}>{alt}".format(**params)))
+                    # log.debug(f"Import variant: {params}")
+                    variant = strategy.import_one(params)
+                    if variant:
+                        log.info("Imported variant: {chr}:{start}{ref}>{alt}".format(**params))
                     else:
-                        self.stdout.write(self.style.ERROR("Variant could not be imported: {chr}:{start}{ref}>{alt}".format(**params)))
+                        log.error("Variant could not be imported: {chr}:{start}{ref}>{alt}".format(**params))
                 else:
-                    self.stdout.write(self.style.ERROR("Variant definition not sufficient: {chr}:{start}{ref}>{alt}".format(**params)))    
+                    log.error("Variant definition not sufficient: {chr}:{start}{ref}>{alt}".format(**params))
 
                 if options.get('one'):
                     break
                 
         except FileNotFoundError as fnf:
-            self.stdout.write(self.style.ERROR(fnf))
+            log.error(fnf)
       except Exception as ex:
-        self.stdout.write(self.style.ERROR(ex))
+        log.error(ex)
         traceback.print_exc()
