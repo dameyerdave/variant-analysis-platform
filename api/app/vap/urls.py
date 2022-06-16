@@ -7,6 +7,7 @@ from rest_framework import urls as rest_framework_urls
 from importer import urls as importer_urls
 from config import urls as config_urls
 from core.endpoints import SearchViewSet
+from core.views import Report
 
 default_router = DefaultRouter()
 default_router.register(r'search', SearchViewSet, basename='search')
@@ -20,4 +21,5 @@ urlpatterns = [
     path('api/', include(default_router.urls)),
     path('api/import/', include(importer_urls)),
     path('api/config/', include(config_urls)),
+    path('api/report/<format>', Report.as_view(), name='report')
 ]

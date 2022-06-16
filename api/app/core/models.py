@@ -3,9 +3,10 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.postgres.aggregates import BoolAnd
 from django.core import validators
-from django.forms import CharField
+from django.forms import CharField, IntegerField
 from core.lookup import lookup
 from phonenumber_field.modelfields import PhoneNumberField
+from django.contrib.postgres.fields import ArrayField
 from django.utils import timezone as tz
 from simple_history.models import HistoricalRecords
 from config.config import Config
@@ -100,6 +101,7 @@ class VariantConsequence(models.Model):
         max_length=lookup.variant_consequence_impact.max_length, choices=lookup.variant_consequence_impact.choices)
     description = models.TextField()
     accession = models.CharField(max_length=10)
+    consequence_ranking = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.term
@@ -120,6 +122,7 @@ class Variant(AnnotationModel):
     end = models.IntegerField(help_text='The end of the variant')
     allele_string = models.TextField()
     variant_class = models.TextField(null=True, help_text='The class of the variant')
+    dbsnp_id = models.TextField(null=True)
 
     strand = models.CharField(
         max_length=lookup.strand.max_length, choices=lookup.strand.choices, null=True)
@@ -237,8 +240,9 @@ class SampleVariant(AnnotationModel):
     sample = models.ForeignKey(Sample, related_name=related_name, on_delete=models.CASCADE)
     variant = models.ForeignKey(Variant, related_name=related_name, on_delete=models.CASCADE)
 
-    # # Specific fields for variants in samples
-    zygosity = models.CharField(max_length=lookup.zygosity.max_length, choices=lookup.zygosity.choices, default=lookup.zygosity.default)
+    # Specific fields for variants in samples
+    zygosity = models.CharField(max_length=lookup.zygosity.max_length, choices=lookup.zygosity.choices, default=lookup.zygosity.default, null=True)
+    causative = models.BooleanField(default=False, help_text="If true This is a causative variant in this sample")
 
     history = HistoricalRecords(inherit = True)
     objects = FilterManager()
@@ -249,7 +253,35 @@ class SampleVariant(AnnotationModel):
 class Phenotype(AnnotationModel):
     gene = models.ForeignKey(Gene, null=True, on_delete=models.SET_NULL)
     phenotype = models.TextField()
-    inheritance_mode = models.CharField(max_length=lookup.inheritance_mode.max_length, choices=lookup.inheritance_mode.choices)
+    inheritance_modes = ArrayField(models.CharField(max_length=50), null=True)
 
     history = HistoricalRecords(inherit = True)
     objects = FilterManager()
+
+    class Meta:
+        unique_together = ['gene', 'phenotype']
+
+class Disease(AnnotationModel):
+    identifier = models.CharField(max_length=8, unique=True)
+    name = models.TextField()
+    type = models.CharField(max_length=lookup.disease_type.max_length, choices=lookup.disease_type.choices, default=lookup.disease_type.default)
+    _class = models.CharField(max_length=20, null=True)
+    class_name = models.TextField(null=True)
+    semantic_type = models.CharField(max_length=20, null=True)
+    score = models.FloatField()
+    ei = models.FloatField(null=True)
+    year_initial = models.IntegerField(null=True)
+    year_final = models.IntegerField(null=True)
+    source = models.CharField(max_length=50)
+
+    history = HistoricalRecords(inherit = True)
+    objects = FilterManager()
+
+class VariantDisease(models.Model):
+    related_name='variant_diseases'
+
+    variant = models.ForeignKey(Variant, related_name=related_name, on_delete=models.CASCADE)
+    disease = models.ForeignKey(Disease, related_name=related_name, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ['disease', 'variant']

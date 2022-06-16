@@ -71,8 +71,8 @@ lookup = DD({
         default='Unknown'
     ),
     'zygosity': Lookup(
-        choices=['Unknown', 'Homozygous', 'Heterozygous', 'Hemizygous', 'Homoplasmic', 'Heteroplasmic', 'Zero_coverage_region'],
-        default='Unknown'
+        choices=['Homozygous', 'Heterozygous', 'Hemizygous', 'Homoplasmic', 'Heteroplasmic', 'Zero_coverage_region'],
+        default=None
     ),
     'tissue': Lookup(
         choices=['unknown', 'blood', 'hair', 'skin', 'amniotic fluid', 'inside surface of the cheek'],
@@ -80,5 +80,8 @@ lookup = DD({
     ),
     'inheritance_mode': Lookup(
         choices=['AD', 'AR', 'DD', 'DR', 'MD', 'MR', 'XD', 'XR']
+    ),
+    'disease_type': Lookup(
+        choices=['disease', 'phenotype', 'group']
     )
 })

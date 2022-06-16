@@ -17,10 +17,14 @@ class ImportStrategy(VepStrategy):
             params.update({
                 'vep_options': {
                     'assembly': 'GRCh38'
-                }
+                },
+                'zygosity': data.get('Zygosity').split(':')[0]
             })
             vep_info = self._get_vep_info(params)
-            # print('vep_info', vep_info)
+            annotations = self._import_gnomad(vep_info)
+            params.update({
+                'annotations': annotations
+            })
             with transaction.atomic():
                 variant = self._import_variant(vep_info, params)
                 transcripts = self._import_transcripts(variant, vep_info, params)
@@ -36,13 +40,8 @@ class ImportStrategy(VepStrategy):
                             vep_transcript.annotations.update(_transcript)
                         else:
                             log.warning(f"VEP does not know {_transcript.get('ensembl_id')}")
+                self._import_sample(params, variant)
                 self._import_pubmed_evidences(vep_info, variant)
-                if params.get('sample_id'):
-                    sample, _ = Sample.objects.get_or_create(id=params.get('sample_id'))
-                    sampleVariant, _ = SampleVariant.objects.get_or_create(
-                        sample=sample,
-                        variant=variant,
-                        zygosity=data.get('Zygosity').split(':')[0]
-                    )
+                self._import_disgenet(variant)
                  
         return variant

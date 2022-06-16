@@ -19,8 +19,10 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('config', type=str, help='The config to use to import the file')
         parser.add_argument('file', type=str, help='The file to import')
+        parser.add_argument('--assembly', type=str, help='The assembly to use [GRCh38, GRCh37]')
         parser.add_argument('--one', action='store_true', help='Only import the first row (for testing purposes)')
-        parser.add_argument('--sample-id', type=str, help='The sample id')
+        parser.add_argument('--sample', type=str, help='The sample id')
+        
 
     def __extract_value(self, row, config):
         if not config:
@@ -82,6 +84,7 @@ class Command(BaseCommand):
                 # as data the row is provided
                 params = {
                   'config': import_config, 
+                  'sample': self.__extract_value(row, import_config.get('sample')) or options.get('sample'),
                   'chr': self.__extract_value(row, import_config.get('chromosome')),
                   'start': self.__extract_value(row, import_config.get('start')),
                   'end': self.__extract_value(row, import_config.get('end')),
@@ -89,7 +92,9 @@ class Command(BaseCommand):
                   'alt': self.__get_allele(self.__extract_value(row, import_config.get('alt')), strand),
                   'transcript_id': self.__extract_value(row, import_config.get('transcript_id')),
                   'data': row,
-                  'sample_id': options.get('sample_id')
+                  'vep_options': {
+                      'assembly': options.get('assembly') or import_config.get('assembly')
+                  }
                 }
 
                 # Check if the required keys are given

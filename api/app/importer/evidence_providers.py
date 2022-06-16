@@ -29,11 +29,11 @@ class PubMedEvidenceProvider(EvidenceProvider):
                 data = xmltodict.parse(resp.content)
                 try:
                     evidence = {
-                    'source': 'Pubmed',
-                    'reference': params['pmid'],
-                    'title': data['PubmedArticleSet']['PubmedArticle']['MedlineCitation']['Article']['ArticleTitle'],
-                    'summary': self.__get_summary(data['PubmedArticleSet']['PubmedArticle']['MedlineCitation']['Article']),
-                    'evidence_date': make_aware(dt.strptime("{Year}-{Month}-{Day}".format(**data['PubmedArticleSet']['PubmedArticle']['MedlineCitation']['DateRevised']), '%Y-%m-%d'))
+                        'source': 'Pubmed',
+                        'reference': params['pmid'],
+                        'title': data['PubmedArticleSet']['PubmedArticle']['MedlineCitation']['Article']['ArticleTitle'],
+                        'summary': self.__get_summary(data['PubmedArticleSet']['PubmedArticle']['MedlineCitation']['Article']),
+                        'evidence_date': make_aware(dt.strptime("{Year}-{Month}-{Day}".format(**data['PubmedArticleSet']['PubmedArticle']['MedlineCitation']['DateRevised']), '%Y-%m-%d'))
                     }
                 except KeyError as ke:
                     log.warning(ke, data)

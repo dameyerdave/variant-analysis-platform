@@ -11,8 +11,8 @@ ENV GIT_BRANCH=${GIT_BRANCH}
 ENV GIT_LASTCOMMITDATE=${GIT_LASTCOMMITDATE}
 
 COPY ./requirements.txt /requirements.txt
-RUN apk add --update --no-cache postgresql-client jpeg-dev git bash
-RUN apk add --update --no-cache --virtual .tmp-build-deps gcc g++ make libc-dev linux-headers postgresql-dev musl-dev zlib zlib-dev bzip2-dev xz-dev libffi-dev rust
+RUN apk add --update --no-cache postgresql-client jpeg-dev git bash freetype
+RUN apk add --update --no-cache --virtual .tmp-build-deps gcc g++ make libc-dev linux-headers postgresql-dev musl-dev zlib zlib-dev bzip2-dev xz-dev libffi-dev rust python3-dev freetype-dev
 RUN apk add --update --no-cache nodejs yarn --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
 RUN rm -f package.json yarn.lock
 RUN pip --disable-pip-version-check install --upgrade pip

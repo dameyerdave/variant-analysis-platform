@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+      body {
+        font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+          "Lucida Sans", Arial, sans-serif;
+      }
+      h1 {
+        font-weight: bold;
+        font-size: 6px;
+      }
+    </style>
+    {% if format == 'pdf' %}
+    <style type="text/css">
+      h1 {
+        color: #ff0000;
+        font-size: 12px;
+      }
+    </style>
+    {% endif %}
+  </head>
+  <body>
+    hello from template
+    <h1>{{ format }}</h1>
+  </body>
+</html>

@@ -2,11 +2,12 @@ from django.db.utils import IntegrityError
 from requests import RequestException
 from importer.proxys import vep_offline, genenames
 from django.utils.translation import gettext as _
-from core.models import Evidence, Variant, Transcript, Gene, VariantConsequence, VariantEvidence
+from core.models import Disease, Evidence, Phenotype, Variant, Transcript, Gene, VariantConsequence, VariantDisease, VariantEvidence, Sample, SampleVariant
 from django.db import transaction
 from bioinfo_toolset.modules.formatter import transcript_name
 from importer.evidence_providers import PubMedEvidenceProvider
-from importer.proxys import vrs
+from importer.proxys import vrs, gnomad, omim, disgenet
+from config.config import Config
 
 class BaseStrategy():
     def import_one(self, params):
@@ -15,6 +16,7 @@ class BaseStrategy():
 class VepStrategy(BaseStrategy):
     def __init__(self):
         self.pubMedEvidenceProvider = PubMedEvidenceProvider()
+        self.config = Config().get_import_config('general')
 
     def _import_transcripts(self, variant, vep_info, params):
         """ Import the VEP transcripts and return the list of found transcripts """
@@ -49,6 +51,25 @@ class VepStrategy(BaseStrategy):
                     if len(gene_info['response']['docs']) > 0:
                         gene.annotations = gene_info['response']['docs'][0]
                         gene.save()
+                omim_resp = omim(transcript_consequence.get('gene_symbol'))
+                if omim_resp.ok:
+                    omim_info = omim_resp.json()
+                    for geneMap in omim_info['omim']['searchResponse']['geneMapList']:
+                        geneMap = geneMap['geneMap']
+                        if 'phenotypeMapList' in geneMap:
+                            for phenotypeMap in geneMap['phenotypeMapList']:
+                                phenotypeMap = phenotypeMap['phenotypeMap']
+                                ims = []
+                                if phenotypeMap['phenotypeInheritance']:
+                                    ims = phenotypeMap['phenotypeInheritance'].split(';')
+                                phenotype = Phenotype.objects.update_or_create(
+                                    gene = gene,
+                                    phenotype = phenotypeMap['phenotype'],
+                                    defaults = {
+                                        'inheritance_modes': ims,
+                                        'annotations': phenotypeMap
+                                    }
+                                )
             _transcript_name, found = transcript_name(
                 transcript_consequence)
             if not found:
@@ -72,6 +93,8 @@ class VepStrategy(BaseStrategy):
 
 
     def _import_pubmed_evidences(self, vep_info, variant):
+        if self.config['sources']['pubmed'] == False:
+            return
         if 'colocated_variants' in vep_info:
             for colocated_variant in vep_info.get('colocated_variants'):
                 if 'pubmed' in colocated_variant:
@@ -97,6 +120,7 @@ class VepStrategy(BaseStrategy):
 
     def _import_variant(self, vep_info, params):
         annotations = self.__extract_variant_annotations(vep_info)
+        # print('most_severe_consequence', vep_info.get('most_severe_consequence'))
         if params.get('annotations'):
             annotations.update(params.get('annotations'))
         variant, _ = Variant.objects.update_or_create(
@@ -105,6 +129,7 @@ class VepStrategy(BaseStrategy):
                 start=vep_info.get('start'),
                 end=vep_info.get('end'),
                 allele_string=vep_info.get('allele_string'),
+                dbsnp_id=self.__extract_dbsnp_id(annotations),
                 defaults={
                     'strand': vep_info.get('strand'),
                     'variant_class': vep_info.get('variant_class'),
@@ -125,13 +150,74 @@ class VepStrategy(BaseStrategy):
             raise RequestException(vep_resp.json())
 
 
+    def _import_gnomad(self, vep_info):
+        if self.config['sources']['gnomad'] == False:
+            return
+        ref, alt = vep_info.get('allele_string').split('/')
+        resp = gnomad(f"{vep_info.get('seq_region_name')}-{vep_info.get('start')}-{ref}-{alt}", assembly=vep_info.get('assembly_name'))
+        maf = None
+        clinvar_submissions = None
+        if resp.ok:
+            data = resp.json()
+            if 'data' in data and 'variant' in data['data'] and data['data']['variant'] and 'genome' in data['data']['variant']:
+                maf = data['data']['variant']['genome']
+            if 'data' in data and 'clinvar_variant' in data['data'] and data['data']['clinvar_variant'] and 'submissions' in data['data']['clinvar_variant']:
+                clinvar_submissions = data['data']['clinvar_variant']['submissions']
+        
+        return {'maf': maf, 'clinvar_submissions': clinvar_submissions}
+
+    def _import_sample(self, params, variant):
+        if params.get('sample'):
+            sample, _ = Sample.objects.get_or_create(id=params.get('sample'))
+            SampleVariant.objects.get_or_create(
+                sample=sample,
+                variant=variant,
+                zygosity=params.get('zygosity')
+            )
+
+
+    def _import_disgenet(self, variant):
+        if self.config['sources']['disgenet'] == False:
+            return
+        if variant.dbsnp_id:
+            resp = disgenet(variant.dbsnp_id)
+            if resp.ok:
+                print('################ FOUND EVIDENCE ON DISGENET #############################')
+                disgenet_infos = resp.json()
+                for disgenet_info in disgenet_infos:
+                    disease, _ = Disease.objects.update_or_create(
+                        identifier = disgenet_info.get('diseaseid'),
+                        defaults = {
+                            'name': disgenet_info.get('disease_name'),
+                            '_class': disgenet_info.get('disease_class'),
+                            'class_name': disgenet_info.get('disease_class_name').strip() if disgenet_info.get('disease_class_name') else None,
+                            'type': disgenet_info.get('disease_type'),
+                            'semantic_type': disgenet_info.get('disease_semantic_type'),
+                            'score': disgenet_info.get('score'),
+                            'ei': disgenet_info.get('ei'),
+                            'year_initial': disgenet_info.get('year_initial'),
+                            'year_final': disgenet_info.get('year_final'),
+                            'source': disgenet_info.get('source')
+                        }    
+                    )
+                    VariantDisease.objects.get_or_create(
+                        variant=variant,
+                        disease=disease
+                    )
+
     def import_one(self, params):
         variant = None
-        with transaction.atomic():
-            vep_info = self._get_vep_info(params)
+        vep_info = self._get_vep_info(params)
+        annotations = self._import_gnomad(vep_info)
+        params.update({
+            'annotations': annotations
+        })
+        with transaction.atomic():    
             variant = self._import_variant(vep_info, params)
             self._import_transcripts(variant, vep_info, params)
+            self._import_sample(params, variant)
             self._import_pubmed_evidences(vep_info, variant)
+            self._import_disgenet(variant)
         return variant
         
     def __extract_variant_annotations(self, vep_info):
@@ -162,3 +248,13 @@ class VepStrategy(BaseStrategy):
         if 'regulatory_feature_consequences' in vep_info:
             variant_annotations['regulatory_feature_conequences'] = vep_info.get('regulatory_feature_consequences')
         return variant_annotations
+
+    def __extract_dbsnp_id(self, annotations):
+        if 'id' in annotations:
+            ids = annotations.get('id')
+            if isinstance(ids, str):
+                ids = [ids]
+            for id in annotations.get('id'):
+                if id.startswith('rs'):
+                    return id
+        return None

@@ -25,7 +25,7 @@ services:
       - ./api/config:/config
       - ./api/plugins:/plugins
       - ./.git:/.git
-      - ./data:/data
+      - ./data:/data:z
     environment:
       - POSTGRES_HOST=db
     env_file: .env
@@ -49,6 +49,7 @@ services:
     image: dameyerdave/vep-offline-rest
     volumes:
       - "${HOME}/vep_data:/opt/vep/.vep"
+      - ./data/images:/opt/vep/src/ensembl-vep/images
     ports:
       - "5005:5005"
   redis:
@@ -62,3 +63,16 @@ services:
     volumes:
       - "/usr/local/share/seqrepo:/usr/local/share/seqrepo"
     restart: unless-stopped
+
+  disgenet:
+    image: ethnexus/disgenet-ms
+    ports:
+      - "8077:8000"
+    volumes:
+      - ./data:/data:z
+    secrets:
+      - disgenet_creds
+    env_file: .env
+secrets:
+  disgenet_creds:
+    file: ./.disgenet_creds

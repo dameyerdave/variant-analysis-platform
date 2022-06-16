@@ -35,7 +35,6 @@ class VariantEndpoint(DefaultEndpoint):
         # We add the transcript names to the queryset as well as the gene names
         config = Config()
         transcript_filter = q_from_config(config.get_filter('transcript', _filter), prefix='transcripts__')
-        print('_filter', _filter)
         return qs.annotate(
                 transcript_names=ArrayAgg('transcripts__name', filter=transcript_filter)
             ).annotate(
@@ -53,7 +52,7 @@ class VariantEndpoint(DefaultEndpoint):
 @register
 class GeneEndpoint(DefaultEndpoint):
     model = Gene
-    filter_fields = ['symbol', 'transcripts__id', 'transcripts__name']
+    filter_fields = ['symbol', 'transcripts__id', 'transcripts__name', 'transcripts__variant_id']
     extra_fields = []
 
     base_viewset = DefaultViewSet.build(model=model)
@@ -108,6 +107,7 @@ class VariantEvidenceEndpoint(DefaultEndpoint):
 @register
 class PhenotypeEndpoint(DefaultEndpoint):
     model = Phenotype
+
 
 class SearchViewSet(ObjectMultipleModelAPIViewSet):
     def get_querylist(self):

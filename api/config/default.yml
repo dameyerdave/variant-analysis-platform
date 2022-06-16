@@ -8,7 +8,7 @@ sample:
     - tissue
 variant:
   fields:
-    - vrs_id
+    # - vrs_id
     - assembly
     - chromosome
     - start
@@ -20,16 +20,26 @@ variant:
     - variant_class:
         label: variant_class
     - extra__most_severe_consequence:
-        label: Consequence
+        label: consequence
     - gene_names:
-        label: Genes
+        label: genes
+    - annotations__minor_allele_freq:
+        label: maf
     - annotations__clin_sig:
         label: clinical_significances
         highlight:
-          benign: bg-green-5
-          pathogenic: bg-red-5
+          benign: green-5
+          likely_benign: light-green-5
+          pathogenic: red-5
+          likely_pathogenic: orange-5
+          uncertain_significance: light-blue-5
+          drug_response: orange-2
     # - transcript_names:
     #     label: Transcripts
+  annotations:
+    - maf__populations:
+        label: maf
+        component: SimpleTable
   search_fields:
     - start
     - transcripts__name
@@ -49,6 +59,7 @@ variant:
                 - frameshift_variant
                 - stop_gained
                 - start_lost
+                - synonymous_variant
             - most_severe_consequence__term__startswith: splice
             - most_severe_consequence__term__startswith: inframe
 transcript:
@@ -66,8 +77,22 @@ transcript:
         label: consequence
         format: beautify_list
     - annotations__impact:
+        highlight:
+          LOW: green-5
+          MODERATE: orange-5
+          HIGH: red-5
     - annotations__biotype:
         format: beautify_string
+    - annotations__polyphen_prediction:
+        label: polyphen
+        highlight:
+          benign: green-5
+          probably_damaging: orange-5
+    - annotations__sift_prediction:
+        label: sift
+        highlight:
+          tolerated: green-5
+          deleterious: red-5
   flags:
     # Defining flags needs a restart of the application
     canonical:
@@ -99,6 +124,25 @@ transcript:
       and:
         # we show only protein_coding transcripts
         - annotations__biotype: protein_coding
+        - or:
+            - annotations__pick: 1
+            # - annotations__canonical: 1
+        - or:
+            - annotations__consequence_terms__contains: missense_variant
+            - annotations__consequence_terms__contains: frameshift_variant
+            - annotations__consequence_terms__contains: stop_gained
+            - annotations__consequence_terms__contains: start_lost
+            - annotations__consequence_terms__contains: synonymous_variant
+            - annotations__consequence_terms__contains: splice_acceptor_variant
+            - annotations__consequence_terms__contains: splice_donor_variant
+            - annotations__consequence_terms__contains: splice_region_variant
+            - annotations__consequence_terms__contains: splice_donor_5th_base_variant
+            - annotations__consequence_terms__contains: splice_donor_region_variant
+            - annotations__consequence_terms__contains: splice_polypyrimidine_tract_variant
+            - annotations__consequence_terms__contains: inframe_insertion
+            - annotations__consequence_terms__contains: inframe_deletion
+            - annotations__consequence_terms__contains: protein_altering_variant
+            - annotations__consequence_terms__contains: NMD_transcript_variant
   strategies:
     ranking: VepRanking
   custom_annotations:
@@ -146,6 +190,9 @@ import:
   tupro:
     strategy: vep
     format: tsv
+    assembly: GRCh37
+    sample:
+      field: ExternalID
     chromosome:
       field: SV-GENOME-POSITION
       regex: "chr([^:]+):[0-9]+"
@@ -177,7 +224,7 @@ import:
       field: Alt
     # specific parameters for this strategy
     gene_info: '(?P<gene>[^\|]+)\|(?P<ensembl_ids>[^\|]+)\|(?P<strand>[^\|]+)\|(?P<pathways>[^\|]+)\|(?P<hsir>[^\|]+)\|(?P<tier>[^\|]+)\|(?P<custom_phenotypes>[^\|]+)\|(?P<mitochondrial>[^\|]+)\|(?P<gene_type>[^\|]+)\|(?P<omim_phenotypes>[^\|]+)\|(?P<orpha_phenotypes>[^\|]+)\|(?P<missense_info>[^\;]+)(?:;|$)'
-    snv_info: '(?P<gene>[^\|]+)\|(?P<ensembl_id>[^\&]+)\&(?P<ref_seq_id>[^\&]+)\&(?P<rank>[^\|]+)\|(?P<dna_change>[^\|]+)\|(?P<protein_change>[^\|]+)\|(?P<variant_impact>[^\|]+)\|(?P<affected_exon>[^\|]+)\|(?P<max_ent_scan_ref>[^\|]+)\|(?P<max_ent_scan_alt>[^\|]+)\|(?P<max_ent_scan_diff>[^\|]+)\|(?P<revel_score>[^\|]+)\|(?P<ada_score>[^\|]+)\|(?P<rf_score>[^\|]+)\|(?P<protein_domains>[^\|]+)\|(?P<protein_domain_predictions>[^\|]+)\|(?P<clinical_significances>[^\|]+)\|(?P<clinvar_conflicts>[^\|]+)\|(?P<variant_ids>[^\|]+)\|(?P<gnom_ad3_infos>[^\|]+)\|(?P<gnom_ad2g_infos>[^\|]+)\|(?P<gnom_ad2e_infos>[^\|]+)\|(?P<ex_ac_infos>[^\|]+)\|(?P<variant_sub_type>[^\|]+)\|(?P<splicing_type>[^\|]+)\|(?P<repetitive_region_info>[^\|]+)\|(?P<hotspot_region_info>[^\|]+)\|(?P<autopvs1>[^;]+)(?:;|$)'
+    snv_info: '(?P<gene>[^\|]+)\|(?P<ensembl_id>[^\&]+)\&(?P<ref_seq_id>[^\&]+)\&(?P<rank>[^\|]+)\|(?P<dna_change>[^\|]+)\|(?P<protein_change>[^\|]+)\|(?P<variant_impact>[^\|]+)\|(?P<affected_exon>[^\|]+)\|(?P<max_ent_scan_ref>[^\|]+)\|(?P<max_ent_scan_alt>[^\|]+)\|(?P<max_ent_scan_diff>[^\|]+)\|(?P<revel_score>[^\|]+)\|(?P<ada_score>[^\|]+)\|(?P<rf_score>[^\|]+)\|(?P<protein_domains>[^\|]+)\|(?P<protein_domain_predictions>[^\|]+)\|(?P<clinical_significances>[^\|]+)\|(?P<clinvar_conflicts>[^\|]+)\|(?P<variant_ids>[^\|]+)\|(?P<gnom_ad3_infos>[^\|]+)\|(?P<gnom_ad2g_infos>[^\|]+)\|(?P<gnom_ad2e_infos>[^\|]+)\|(?P<ex_ac_infos>[^\|]+)\|(?P<variant_sub_type>[^\|]+)\|(?P<ensembl_transcript_info>[^\|]+)\|(?P<splicing_type>[^\|]+)\|(?P<repetitive_region_info>[^\|]+)\|(?P<hotspot_region_info>[^\|]+)\|(?P<autopvs1>[^;]+)(?:;|$)'
     cnv_info: '(?P<affected_genes>[^\|]+)\|(?P<variant_impact>[^\|]+)\|(?P<copy_number>[^\|]+)\|(?P<cnv_length>[^\|]+)\|(?P<cnv_start>[^\|]+)\|(?P<cnv_end>[^\|]+)\|(?P<dgv_info>[^\|]+)\|(?P<autopvs1>[^\|]+)$'
     # transcript:
     #   field: SNV-info
@@ -204,3 +251,8 @@ import:
     #   field: STRAND
     # transcripts:
     #   field:
+  general:
+    sources:
+      pubmed: true
+      gnomad: true
+      disgenet: true

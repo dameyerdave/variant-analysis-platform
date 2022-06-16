@@ -1,7 +1,13 @@
+from django import views
 from rest_framework import viewsets
 from core.helpers import parse_bool
 from django.db.models import Prefetch
 from config.config import Config
+from django.template.loader import get_template
+from django.http import HttpResponse
+import xhtml2pdf.pisa as pisa
+from io import BytesIO
+import base64
 
 class DefaultViewSet(viewsets.ModelViewSet):
     @classmethod
@@ -63,3 +69,17 @@ class DefaultViewSet(viewsets.ModelViewSet):
           return qs
 
       return _DefaultViewSet
+
+class Report(views.View):
+  def get(self, request, format, **kwargs):
+    template = get_template('default_report.html')
+    html = template.render({'format': format}, request)
+    if format == 'pdf':
+        response = BytesIO()
+        pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), response)
+        if not pdf.err:
+          return HttpResponse(response.getvalue(), content_type='application/pdf')
+    elif format == 'base64':
+        return HttpResponse(base64.b64encode(html.encode('utf-8')), content_type='text/plain')
+    else:
+      return HttpResponse(html)

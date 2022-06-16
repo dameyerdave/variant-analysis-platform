@@ -3,14 +3,11 @@ from rest_framework.response import Response
 from rest_framework import status
 
 # from api.app.core.models import AlleleRegistry
-from importer.proxys import vep, vep_offline, genenames, alleleregistry
-# from bioinfo_toolset.modules.vep_offline import OfflineVep
 from django.utils.translation import gettext as _
-from core.models import Variant, Transcript, Gene, VariantConsequence
-from django.db import transaction
-from bioinfo_toolset.modules.formatter import transcript_name
 from importer.strategies import VepStrategy
 from core.serializers import ExpandVariantSerializer
+
+import traceback
 
 
 class AddVepVariantView(APIView):
@@ -40,5 +37,6 @@ class AddVepVariantView(APIView):
             serialized = ExpandVariantSerializer(variant)
             return Response(serialized.data, status.HTTP_201_CREATED)
         except Exception as ex:
+            traceback.print_exc()
             return Response({'detail': _('Error importing variant %(region)s: %(exception)s') % {'region': region, 'exception': ex}}, 
                 status.HTTP_400_BAD_REQUEST)

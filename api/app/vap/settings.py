@@ -75,7 +75,7 @@ ROOT_URLCONF = 'vap.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -183,7 +183,7 @@ REST_FRAMEWORK = {
         'core.backends.DynamicSearchFilter'
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 100,
+    'PAGE_SIZE': 1000,
     # 'DEFAULT_METADATA_CLASS': 'meta.serializers.APIMetadata',
     'DEFAULT_METADATA_CLASS': 'drf_auto_endpoint.metadata.AutoMetadata',
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
