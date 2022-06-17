@@ -174,6 +174,12 @@ gene:
     - annotations__prev_symbol
   ordering:
     - symbol
+evidence:
+  fields:
+    - reference
+    - source
+    - title:
+        format: ellipsis
 samplevariant:
   fields:
     - sample
