@@ -1,6 +1,7 @@
 ---
 options:
   na_string: "."
+  label_fields: ["id", "name", "label"]
 sample:
   fields:
     - id
@@ -37,9 +38,15 @@ variant:
     # - transcript_names:
     #     label: Transcripts
   annotations:
-    - maf__populations:
-        label: maf
-        component: SimpleTable
+    maf__populations:
+      label: maf
+      component: SimpleTable
+    clinvar_submissions:
+      component: ClinvarSubmissions
+    frequencies:
+      component: Frequencies
+    pubmed:
+      reference: https://pubmed.ncbi.nlm.nih.gov/$1/
   search_fields:
     - start
     - transcripts__name
@@ -174,6 +181,9 @@ gene:
     - annotations__prev_symbol
   ordering:
     - symbol
+  annotations:
+    omim_id:
+      reference: https://www.omim.org/entry/$1
 evidence:
   fields:
     - reference
@@ -192,6 +202,17 @@ samplevariant:
   #     and:
   #       # we show only protein_coding transcripts
   #       - variant__transcripts__annotations__biotype: protein_coding
+references:
+  - regex: "(COS[VM][0-9]+)"
+    url: https://cancer.sanger.ac.uk/cosmic/search?q=$1
+  - regex: "(rs[0-9]+)"
+    url: https://www.ncbi.nlm.nih.gov/snp/$1
+  - regex: "(RCV[0-9]+)"
+    url: https://www.ncbi.nlm.nih.gov/clinvar/$1/?redir=rcv
+  - regex: "VCV[0]*([1-9]+)"
+    url: https://www.ncbi.nlm.nih.gov/clinvar/variation/$1/?redir=vcv
+  - regex: "(CCDS[0-9]+)"
+    url: https://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA=$1
 import:
   tupro:
     strategy: vep
