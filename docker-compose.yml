@@ -1,5 +1,7 @@
 version: "3"
-
+volumes:
+  pg_data:
+  redis_data:
 services:
   ui:
     build:
@@ -45,6 +47,8 @@ services:
     hostname: db
     restart: unless-stopped
     env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
   vep_rest:
     image: dameyerdave/vep-offline-rest
     volumes:
@@ -56,6 +60,11 @@ services:
     image: redis:7.0.0
     hostname: redis
     restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    # To start redis in persistent mode (every 60s a snapshot is stored)
+    command: |
+      sh -c 'redis-server --save 60 1 --loglevel warning'
 
   seqrepo:
     image: biocommons/seqrepo-rest-service
@@ -67,7 +76,7 @@ services:
   disgenet:
     image: ethnexus/disgenet-ms
     ports:
-      - "8077:8000"
+      - "9077:9077"
     volumes:
       - ./data:/data:z
     secrets:
