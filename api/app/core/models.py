@@ -202,7 +202,6 @@ class VariantEvidence(TimeTrackedModel):
     class Meta:
         unique_together = ('variant', 'evidence')
 
-
 class Patient(models.Model):
     related_name = 'patients'
 
@@ -261,21 +260,24 @@ class Phenotype(AnnotationModel):
     class Meta:
         unique_together = ['gene', 'phenotype']
 
+class DiseaseClass(models.Model):
+    identifier = models.CharField(max_length=20, unique=True)
+    name = models.TextField()
+
 class Disease(AnnotationModel):
     identifier = models.CharField(max_length=8, unique=True)
     name = models.TextField()
     type = models.CharField(max_length=lookup.disease_type.max_length, choices=lookup.disease_type.choices, default=lookup.disease_type.default)
-    _class = models.CharField(max_length=20, null=True)
-    class_name = models.TextField(null=True)
-    semantic_type = models.CharField(max_length=20, null=True)
-    score = models.FloatField()
-    ei = models.FloatField(null=True)
-    year_initial = models.IntegerField(null=True)
-    year_final = models.IntegerField(null=True)
-    source = models.CharField(max_length=50)
+    semantic_type = models.CharField(max_length=50, null=True)
 
     history = HistoricalRecords(inherit = True)
     objects = FilterManager()
+
+class DiseaseDiseaseClass(models.Model):
+    related_name="disease_disease_classes"
+    
+    disease = models.ForeignKey(Disease, related_name=related_name, on_delete=models.CASCADE)
+    disease_class = models.ForeignKey(DiseaseClass, related_name=related_name, on_delete=models.CASCADE)
 
 class VariantDisease(models.Model):
     related_name='variant_diseases'
@@ -285,3 +287,37 @@ class VariantDisease(models.Model):
 
     class Meta:
         unique_together = ['disease', 'variant']
+
+class DiseaseEvidence(TimeTrackedModel):
+    related_name = 'disease_evidences'
+    
+    disease = models.ForeignKey(Disease, related_name=related_name, null=True, on_delete=models.SET_NULL)
+    evidence = models.ForeignKey(Evidence, related_name=related_name, null=True, on_delete=models.SET_NULL)
+
+    history = HistoricalRecords(inherit = True)
+    objects = FilterManager()
+
+    class Meta:
+        unique_together = ('disease', 'evidence')
+
+class VariantAnnotation(models.Model):
+    related_name='variant_annotations'
+    variant = models.ForeignKey(Variant, on_delete=models.CASCADE, related_name=related_name)
+    scope = models.CharField(max_length=50)
+    property = models.CharField(max_length=50)
+    value = models.JSONField(null=True)
+
+    class Meta:
+        unique_together = ('scope', 'property')
+
+class SampleVariantAnnotation(models.Model):
+    related_name='sample_variant_annotations'
+    sample = models.ForeignKey(Sample, on_delete=models.CASCADE, related_name=related_name)
+    variant = models.ForeignKey(Variant, on_delete=models.CASCADE, related_name=related_name)
+    scope = models.CharField(max_length=50)
+    property = models.CharField(max_length=50)
+    value = models.JSONField(null=True)
+
+    class Meta:
+        unique_together = ('scope', 'property')
+        

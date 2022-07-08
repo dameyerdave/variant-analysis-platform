@@ -2,8 +2,11 @@ from drf_auto_endpoint.endpoints import Endpoint
 from drf_auto_endpoint.router import register
 from drf_auto_endpoint.factories import serializer_factory
 from core.helpers import q_from_config
-from core.models import (Variant, Gene, Transcript, VariantConsequence, Evidence, TranscriptEvidence, Patient, Sample, SampleVariant, Phenotype, VariantEvidence)
-from core.serializers import (ExpandVariantSerializer, ExpandSampleVariantSerializer, ExpandTranscriptSerializer, VariantSerializer, ExpandVariantEvidenceSerializer)
+from core.models import (Variant, Gene, Transcript, VariantConsequence, Evidence, TranscriptEvidence, 
+                        Patient, Sample, SampleVariant, Phenotype, VariantEvidence, VariantAnnotation, 
+                        SampleVariantAnnotation, Disease, DiseaseClass, DiseaseDiseaseClass)
+from core.serializers import (ExpandVariantSerializer, ExpandSampleVariantSerializer, ExpandTranscriptSerializer, 
+                            VariantSerializer, ExpandVariantEvidenceSerializer)
 from drf_multiple_model.viewsets import ObjectMultipleModelAPIViewSet
 from config.config import Config, ConfigFileNotFoundException
 from core.helpers import q_or_list, q_from_config
@@ -12,7 +15,7 @@ from django.contrib.postgres.aggregates import ArrayAgg
 
 class DefaultEndpoint(Endpoint):
     include_str = False
-    extra_fields = ['extra']
+    extra_fields = ('extra',)
 
     def get_url(self):
         """ The core endpoint defaults to not include the application name in the apis url. """
@@ -46,14 +49,14 @@ class VariantEndpoint(DefaultEndpoint):
     base_viewset = DefaultViewSet.build(model=model, expand_serializer=ExpandVariantSerializer, prefetch=[
         { 'property': 'transcripts', 'model': Transcript, 'prefetch': { 'property': 'gene', 'model': Gene } }
     ], queryset_extra=queryset_extra)
-    filter_fields = ['transcripts__id', 'transcripts__name', 'sample_variants__sample__id']
-    extra_fields = ['transcript_names', 'gene_names', 'extra']
+    filter_fields = ('transcripts__id', 'transcripts__name', 'sample_variants__sample__id')
+    extra_fields = ('transcript_names', 'gene_names', 'extra')
 
 @register
 class GeneEndpoint(DefaultEndpoint):
     model = Gene
-    filter_fields = ['symbol', 'transcripts__id', 'transcripts__name', 'transcripts__variant_id']
-    extra_fields = []
+    filter_fields = ('symbol', 'transcripts__id', 'transcripts__name', 'transcripts__variant_id')
+    extra_fields = ()
 
     base_viewset = DefaultViewSet.build(model=model)
 
@@ -61,12 +64,12 @@ class GeneEndpoint(DefaultEndpoint):
 class TranscriptEndpoint(DefaultEndpoint):
     model = Transcript
     base_viewset = DefaultViewSet.build(model=model, expand_serializer=ExpandTranscriptSerializer, related=['gene'])
-    filter_fields = ['gene__symbol', 'variant__id']
+    filter_fields = ('gene__symbol', 'variant__id')
 
 @register
 class VariantConsequenceEndpoint(DefaultEndpoint):
     model = VariantConsequence
-    filter_fields = ['term']
+    filter_fields = ('term', )
 
 @register
 class EvidenceEndpoint(DefaultEndpoint):
@@ -91,7 +94,7 @@ class SampleVariantEndpoint(DefaultEndpoint):
         { 'property': 'sample', 'model': Sample }, 
         { 'property': 'variant', 'model': Variant, 'prefetch': { 'property': 'transcripts', 'model': Transcript }}
     ])
-    filter_fields = ['sample__id', 'variant__transcripts__gene__symbol']
+    filter_fields = ('sample__id', 'variant__transcripts__gene__symbol')
 
 @register
 class VariantEvidenceEndpoint(DefaultEndpoint):
@@ -100,10 +103,31 @@ class VariantEvidenceEndpoint(DefaultEndpoint):
         { 'property': 'variant', 'model': Variant }, 
         { 'property': 'evidence', 'model': Evidence }
     ])
-    filter_fields = ['variant__id']
+    filter_fields = ('variant__id', )
+
+@register
+class DiseaseEndpoint(DefaultEndpoint):
+    model = Disease
+
+@register
+class DiseaseClassEndpoint(DefaultEndpoint):
+    model = DiseaseClass
+
+@register
+class DiseaseDiseaseClassEndpoint(DefaultEndpoint):
+    model = DiseaseDiseaseClass
+
+@register
+class VariantAnnotationEndpoint(DefaultEndpoint):
+    model = VariantAnnotation
+    filter_fields = ('variant__id', )
+
+@register
+class SampleVariantAnnotationEndpoint(DefaultEndpoint):
+    model = SampleVariantAnnotation
+    filter_fields = ('variant__id', 'sample__id')
 
     
-
 @register
 class PhenotypeEndpoint(DefaultEndpoint):
     model = Phenotype
