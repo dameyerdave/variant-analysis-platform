@@ -2,12 +2,16 @@ from django.db.utils import IntegrityError
 from requests import RequestException
 from importer.proxys import vep_offline, genenames
 from django.utils.translation import gettext as _
-from core.models import Disease, Evidence, Phenotype, Variant, Transcript, Gene, VariantConsequence, VariantDisease, VariantEvidence, Sample, SampleVariant
+from core.models import (Disease, Evidence, Phenotype, Variant, Transcript, Gene, VariantConsequence, 
+                        VariantDisease, VariantEvidence, Sample, SampleVariant, DiseaseDiseaseClass, 
+                        DiseaseClass, DiseaseEvidence)
 from django.db import transaction
 from bioinfo_toolset.modules.formatter import transcript_name
 from importer.evidence_providers import PubMedEvidenceProvider
 from importer.proxys import vrs, gnomad, omim, disgenet
 from config.config import Config
+from friendlylog import colored_logger as log
+from importer.decorators import time
 
 class BaseStrategy():
     def import_one(self, params):
@@ -18,6 +22,7 @@ class VepStrategy(BaseStrategy):
         self.pubMedEvidenceProvider = PubMedEvidenceProvider()
         self.config = Config().get_import_config('general')
 
+    @time('Import transcripts')
     def _import_transcripts(self, variant, vep_info, params):
         """ Import the VEP transcripts and return the list of found transcripts """
         transcripts = []
@@ -91,7 +96,33 @@ class VepStrategy(BaseStrategy):
             transcripts.append(transcript)
         return transcripts
 
+    def _add_pubmed_evidence(self, pmid, variant, disease=None):
+        _evidence = self.pubMedEvidenceProvider.fetch(pmid=pmid)
+        if _evidence:
+            try:
+                evidence, created = Evidence.objects.update_or_create(
+                    reference=_evidence.get('reference'),
+                    source=_evidence.get('source'),
+                    defaults={
+                        'title': _evidence.get('title'),
+                        'summary': _evidence.get('summary'),
+                        'evidence_date': _evidence.get('evidence_date')
+                    }
+                )
+                variant_evidence, created = VariantEvidence.objects.get_or_create(
+                    variant=variant,
+                    evidence=evidence
+                )
+                # If there is a disease to link we add a disease evidence
+                if disease:
+                    disease_evidence, created = DiseaseEvidence.objects.get_or_create(
+                        disease=disease,
+                        evidence=evidence
+                    )
+            except IntegrityError:
+                pass
 
+    @time('Import pubmed evidences')
     def _import_pubmed_evidences(self, vep_info, variant):
         if self.config['sources']['pubmed'] == False:
             return
@@ -99,25 +130,9 @@ class VepStrategy(BaseStrategy):
             for colocated_variant in vep_info.get('colocated_variants'):
                 if 'pubmed' in colocated_variant:
                     for pmid in colocated_variant.get('pubmed'):
-                        _evidence = self.pubMedEvidenceProvider.fetch(pmid=pmid)
-                        if _evidence:
-                            try:
-                                evidence, created = Evidence.objects.update_or_create(
-                                    reference=_evidence.get('reference'),
-                                    source=_evidence.get('source'),
-                                    defaults={
-                                        'title': _evidence.get('title'),
-                                        'summary': _evidence.get('summary'),
-                                        'evidence_date': _evidence.get('evidence_date')
-                                    }
-                                )
-                                variant_evidence, created = VariantEvidence.objects.get_or_create(
-                                    variant=variant,
-                                    evidence=evidence
-                                )
-                            except IntegrityError:
-                                pass
+                        self._add_pubmed_evidence(pmid, variant)
 
+    @time('Import variant')
     def _import_variant(self, vep_info, params):
         annotations = self.__extract_variant_annotations(vep_info)
         # print('most_severe_consequence', vep_info.get('most_severe_consequence'))
@@ -149,7 +164,7 @@ class VepStrategy(BaseStrategy):
         else:
             raise RequestException(vep_resp.json())
 
-
+    @time('Import gnomad')
     def _import_gnomad(self, vep_info):
         if self.config['sources']['gnomad'] == False:
             return
@@ -166,6 +181,7 @@ class VepStrategy(BaseStrategy):
         
         return {'maf': maf, 'clinvar_submissions': clinvar_submissions}
 
+    @time('Import sample')
     def _import_sample(self, params, variant):
         if params.get('sample'):
             sample, _ = Sample.objects.get_or_create(id=params.get('sample'))
@@ -175,36 +191,44 @@ class VepStrategy(BaseStrategy):
                 zygosity=params.get('zygosity')
             )
 
-
+    @time('Import disgenet')
     def _import_disgenet(self, variant):
         if self.config['sources']['disgenet'] == False:
             return
         if variant.dbsnp_id:
             resp = disgenet(variant.dbsnp_id)
             if resp.ok:
-                print('################ FOUND EVIDENCE ON DISGENET #############################')
-                disgenet_infos = resp.json()
-                for disgenet_info in disgenet_infos:
+                disgenet_info = resp.json()
+                for disease_info in disgenet_info.get('diseases'):
                     disease, _ = Disease.objects.update_or_create(
-                        identifier = disgenet_info.get('diseaseid'),
+                        identifier = disease_info.get('diseaseid'),
                         defaults = {
-                            'name': disgenet_info.get('disease_name'),
-                            '_class': disgenet_info.get('disease_class'),
-                            'class_name': disgenet_info.get('disease_class_name').strip() if disgenet_info.get('disease_class_name') else None,
-                            'type': disgenet_info.get('disease_type'),
-                            'semantic_type': disgenet_info.get('disease_semantic_type'),
-                            'score': disgenet_info.get('score'),
-                            'ei': disgenet_info.get('ei'),
-                            'year_initial': disgenet_info.get('year_initial'),
-                            'year_final': disgenet_info.get('year_final'),
-                            'source': disgenet_info.get('source')
+                            'name': disease_info.get('disease_name'),
+                            'type': disease_info.get('disease_type'),
+                            # 'semantic_type': disgenet_info.get('disease_semantic_type'),
+                            'annotations': disease_info
                         }    
                     )
+                    if disease_info.get('disease_class'):
+                        for idx, identifier in enumerate(disease_info.get('disease_class')):
+                            disease_class, _ = DiseaseClass.objects.update_or_create(
+                                identifier = identifier,
+                                name = disease_info.get('disease_class_name')[idx]
+                            )
+                            DiseaseDiseaseClass.objects.get_or_create(
+                                disease = disease,
+                                disease_class = disease_class
+                            )
                     VariantDisease.objects.get_or_create(
                         variant=variant,
                         disease=disease
                     )
+                    # Import all the evidences provided by disgenet
+                    for evidence in disease_info.get('evidences'):
+                        if evidence.get('pmid'):
+                            self._add_pubmed_evidence(evidence.get('pmid'), variant, disease)
 
+    @time('Import one variant')
     def import_one(self, params):
         variant = None
         vep_info = self._get_vep_info(params)
