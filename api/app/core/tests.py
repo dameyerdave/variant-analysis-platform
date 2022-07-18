@@ -1,10 +1,16 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
+from django.contrib.auth import get_user_model
+from os import environ
 
 
 class TestSerializers(APITestCase):
     fixtures = ['variant_consequences']
+
     def setUp(self):
+        user = get_user_model().objects.create_user(email=environ.get('DJANGO_SU_EMAIL'), password='secret')
+        self.client.force_login(user)
+
         self.default_variant = {
             "assembly": "GRCh38",
             "chromosome": 7,

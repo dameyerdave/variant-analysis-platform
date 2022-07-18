@@ -3,10 +3,16 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from importer.evidence_providers import PubMedEvidenceProvider
 from importer.proxys import vrs, vrs_sequence_identifier, disgenet, vep_offline
-
+from django.contrib.auth import get_user_model
+from os import environ
 
 class TestViews(APITestCase):
     fixtures = ['variant_consequences']
+
+    def setUp(self):
+        user = get_user_model().objects.create_user(email=environ.get('DJANGO_SU_EMAIL'), password='secret')
+        self.client.force_login(user)
+
     def test_add_vep_variant_view(self):
         """ Test the variant import over the view works """
         response = self.client.get(

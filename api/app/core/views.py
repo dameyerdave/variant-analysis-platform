@@ -1,13 +1,23 @@
 from django import views
 from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status
 from core.helpers import parse_bool
 from django.db.models import Prefetch
+from django.contrib.auth import get_user_model
 from config.config import Config
 from django.template.loader import get_template
 from django.http import HttpResponse
 import xhtml2pdf.pisa as pisa
 from io import BytesIO
 import base64
+import json
+import traceback
+from django.db.utils import IntegrityError
+from django.utils.translation import gettext as _
+
+from users.managers import CustomUserManager
 
 class DefaultViewSet(viewsets.ModelViewSet):
     @classmethod
@@ -83,3 +93,44 @@ class Report(views.View):
         return HttpResponse(base64.b64encode(html.encode('utf-8')), content_type='text/plain')
     else:
       return HttpResponse(html)
+
+class OtpToken(views.View):
+  def get(self, request, **kwargs):
+    template = get_template('default_otp_token.html')
+    ctx = {
+      
+    }
+    html = template.render(ctx, request)
+    return HttpResponse(base64.b64encode(html.encode('utf-8')), content_type='text/plain')
+    
+
+class UserViewSet(viewsets.ModelViewSet):
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        user = get_user_model().objects.get(id=request.user.id)
+        serializer = self.get_serializer(user)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def otp_token(self, request):
+        user = get_user_model().objects.get(id=request.user.id)
+        qr_code = user.otp_qrcode()
+        response = HttpResponse(content_type="image/png")
+        qr_code.save(response)
+        return response
+
+    @action(detail=False, methods=['post'])
+    def register(self, request):
+        data = json.loads(request.body.decode('utf-8'))
+        try:
+          user = get_user_model().objects.create_user(data.get('email'), data.get('password'), **{
+            'first_name': data.get('first_name'),
+            'last_name': data.get('last_name')
+          })
+        except IntegrityError as ie:
+          return Response({'detail': _('User {} already exists').format(data.get('email'))}, status.HTTP_406_NOT_ACCEPTABLE)
+        except Exception as ex:
+          traceback.print_exc()
+          return Response({'detail': str(ex)}, status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(user)
+        return Response(serializer.data, status.HTTP_201_CREATED)

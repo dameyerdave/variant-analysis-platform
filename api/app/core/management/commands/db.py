@@ -15,6 +15,7 @@ class Command(BaseCommand):
         call_command('flush')
         call_command('makemigrations', 'core')
         call_command('migrate')
+        call_command('initadmin')
         self.init()
 
     def handle(self, *args, **options):

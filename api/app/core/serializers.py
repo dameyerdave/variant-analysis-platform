@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from core.lookup import lookup
 from core.models import (Variant, Sample, Transcript, SampleVariant, Gene, Evidence, VariantEvidence)
+from django.contrib.auth import get_user_model
+
+from users.managers import CustomUserManager
 
 class DefaultModelSerializer(serializers.ModelSerializer):
     """ The default model serializer that supports additional functionality """
