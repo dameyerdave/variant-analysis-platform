@@ -10,8 +10,10 @@ from core.serializers import (ExpandVariantSerializer, ExpandSampleVariantSerial
 from drf_multiple_model.viewsets import ObjectMultipleModelAPIViewSet
 from config.config import Config, ConfigFileNotFoundException
 from core.helpers import q_or_list, q_from_config
-from core.views import DefaultViewSet
+from core.views import DefaultViewSet, UserViewSet
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.contrib.auth import get_user_model
+from core.permissions import IsOwnUser
 
 class DefaultEndpoint(Endpoint):
     include_str = False
@@ -32,6 +34,22 @@ class DefaultEndpoint(Endpoint):
         # print('fields', self.fields)
         return self.fields
 
+@register()
+class UserEndpoint(Endpoint):
+    url = 'auth/users'
+    permission_classes = (IsOwnUser,)
+    model = get_user_model()
+    base_viewset = UserViewSet
+    fields = (
+            'username', 
+            'first_name',
+            'last_name',
+            'email',
+            'groups',
+            'user_permissions'
+        )
+
+    
 @register
 class VariantEndpoint(DefaultEndpoint):
     def queryset_extra(qs, _filter):
