@@ -29,7 +29,7 @@ django-mkdocs @ git+https://github.com/dameyerdave/django-mkdocs.git@2d55f704e6b
 django-phonenumber-field[phonenumbers]==6.1.0
 djangorestframework==3.13.1
 docker==5.0.3
-drf-jwt==1.19.2
+djangorestframework_simplejwt==5.2.0
 drf-schema-adapter==2.1.1
 django-rest-multiple-models==2.1.3
 django-simple-history==3.0.0
@@ -112,3 +112,5 @@ xmltodict==0.13.0
 redis==4.3.1
 ga4gh.vrs[extras]==0.7.6
 xhtml2pdf==0.2.7
+django-otp==1.1.3
+qrcode==7.3.1
