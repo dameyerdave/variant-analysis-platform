@@ -148,7 +148,7 @@ FIXTURE_DIRS = []
 ### JWT ###
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': td(minutes=5),
-    'REFRESH_TOKEN_LIFETIME': td(days=1),
+    'REFRESH_TOKEN_LIFETIME': td(minutes=30),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
     'UPDATE_LAST_LOGIN': False,
