@@ -6,6 +6,7 @@ from rest_framework_simplejwt import views as jwt_views
 from rest_framework import urls as rest_framework_urls
 from importer import urls as importer_urls
 from config import urls as config_urls
+from users import urls as user_urls
 from core.endpoints import SearchViewSet
 from core.views import Report
 from django_otp.admin import OTPAdminSite
@@ -23,6 +24,7 @@ urlpatterns = [
     path('api/auth/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
     path('api/', include(router.urls)),
     path('api/', include(default_router.urls)),
+    path('api/', include(user_urls)),
     path('api/import/', include(importer_urls)),
     path('api/config/', include(config_urls)),
     path('api/report/<format>', Report.as_view(), name='report')
