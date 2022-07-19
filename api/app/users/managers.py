@@ -20,8 +20,7 @@ class CustomUserManager(BaseUserManager):
 
     def __sendOTPEmail(self, user):
         # Send an email including the qrcode to the user
-        print('Sending email...')
-        Emailer.send_using_template(_('Your OPT token'), (user.email,), 'default_otp_token.html', {'qrcode': user.otp_qrcode_base64()})
+        Emailer.send_using_template(_('Your OPT token'), (user.email,), 'users/default_otp_token.html', {'qrcode': user.otp_qrcode_base64()})
 
     
     def create_user(self, email, password, **extra_fields):
@@ -35,7 +34,10 @@ class CustomUserManager(BaseUserManager):
         user.set_password(password)
         user.save()
 
+        # For each user we create ONE OTP device
         self.__createOTPDevice(user)
+
+        # We send an Email to the user with the OTP QR code
         self.__sendOTPEmail(user)
 
         return user

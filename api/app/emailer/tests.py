@@ -10,4 +10,4 @@ class EmailerTest(TestCase):
 
   def test_emailer(self):
     """ Test sending email to admin with it's qr code"""
-    Emailer.send_using_template('test email', (self.user.email,), 'default_otp_token.html', {'qrcode': self.user.otp_qrcode_base64()})
+    Emailer.send_using_template('test email', (self.user.email,), 'users/default_otp_token.html', {'qrcode': self.user.otp_qrcode_base64()})

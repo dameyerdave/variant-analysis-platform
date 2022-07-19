@@ -96,7 +96,7 @@ class Report(views.View):
 
 class OtpToken(views.View):
   def get(self, request, **kwargs):
-    template = get_template('default_otp_token.html')
+    template = get_template('users/default_otp_token.html')
     ctx = {
       
     }

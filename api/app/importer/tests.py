@@ -53,7 +53,7 @@ class TestProxies(TestCase):
         REF='A'
         ALT='T'
         START=44908821
-        EXPECTED_VRS_IDENTIFIER='ga4gh:GS.IIB53T8CNeJJdUqzn9V_JnRtQadwWCbl'
+        EXPECTED_VRS_IDENTIFIER='ga4gh:SQ.IIB53T8CNeJJdUqzn9V_JnRtQadwWCbl'
         EXPECTED_VRS='ga4gh:VA.7BBsP_2LgHA4RXa05D7Y4JoQuz0g2lMR'
 
         vrs_identifier = vrs_sequence_identifier(SEQUENCE_IDENTIFIER)
