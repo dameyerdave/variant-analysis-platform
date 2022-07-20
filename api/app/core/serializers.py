@@ -41,7 +41,8 @@ class VariantSerializer(DefaultModelSerializer):
         # To support different names for the same assembly
         # _mutable = data._mutable
         # data._mutable = True
-        data['assembly'] = lookup.assembly.normalize(data['assembly'])
+        if 'assembly' in data:
+            data['assembly'] = lookup.assembly.normalize(data['assembly'])
         # data._mutable = _mutable
         return super().to_internal_value(data)
 
