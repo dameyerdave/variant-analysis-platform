@@ -38,13 +38,24 @@ variant:
     # - transcript_names:
     #     label: Transcripts
   annotations:
-    maf__populations:
-      label: maf
-      component: SimpleTable
+    maf:
+      label: gnomad
+      component: GnomadWidget
+      config:
+        populations:
+          - eur
+          - amr
+          - fin
+          - eas
+          - nfe
+          - sas
+          - aa
+          - afr
+          - nfe
     clinvar_submissions:
-      component: ClinvarSubmissions
+      component: ClinvarSubmissionsWidget
     frequencies:
-      component: Frequencies
+      component: FrequenciesWidget
     pubmed:
       reference: https://pubmed.ncbi.nlm.nih.gov/$1/
   search_fields:
