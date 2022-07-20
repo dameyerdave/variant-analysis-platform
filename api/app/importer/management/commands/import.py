@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from config.config import Config
 from importer.parsers import TsvParser
 from importer.strategies import VepStrategy
+from bioinfo_toolset.modules.liftover import liftover
 import re
 from os.path import join
 import traceback
@@ -20,6 +21,7 @@ class Command(BaseCommand):
         parser.add_argument('config', type=str, help='The config to use to import the file')
         parser.add_argument('file', type=str, help='The file to import')
         parser.add_argument('--assembly', type=str, help='The assembly to use [GRCh38, GRCh37]')
+        parser.add_argument('--liftover', type=str, help='The assembly to liftover to [GRCh38, GRCh37]')
         parser.add_argument('--one', action='store_true', help='Only import the first row (for testing purposes)')
         parser.add_argument('--sample', type=str, help='The sample id')
         
@@ -96,6 +98,23 @@ class Command(BaseCommand):
                       'assembly': options.get('assembly') or import_config.get('assembly')
                   }
                 }
+                
+                def __liftover(prop):
+                    if params[prop] is None:
+                        return
+                    _liftover_assembly = {
+                        'GRCh37': 'hg19',
+                        'GRCh38': 'hg38',
+                    }
+                    params['chr'], params[prop] = liftover(
+                        _liftover_assembly[options.get('assembly') or import_config.get('assembly')], 
+                        _liftover_assembly[options.get('liftover') or import_config.get('liftover')], 
+                        params['chr'], int(params[prop]))
+
+                if options.get('liftover') or import_config.get('liftover'):
+                    __liftover('end')
+                    __liftover('start')
+                    params['vep_options']['assembly'] = options.get('liftover') or import_config.get('liftover')
 
                 # Check if the required keys are given
                 check = True

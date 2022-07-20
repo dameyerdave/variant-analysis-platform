@@ -229,6 +229,7 @@ import:
     strategy: vep
     format: tsv
     assembly: GRCh37
+    liftover: GRCh38
     sample:
       field: ExternalID
     chromosome:
