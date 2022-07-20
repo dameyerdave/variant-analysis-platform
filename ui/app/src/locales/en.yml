@@ -1,0 +1,83 @@
+---
+app:
+  title: 'Variant Analysis Platform'
+nav:
+  search: Search
+  samples: Samples
+  variants: Variants
+  transcripts: Transcripts
+  genes: Genes
+title:
+  variants: Variants
+  variant: Variant
+  transcripts: Transcripts
+  transcript: Transcript
+  genes: Genes
+  gene: Gene
+  annotations: Annotations
+  custom_annotations: Custom annotations
+  evidences: Evidences
+  samples: Samples
+  sample: Sample
+hint:
+  search: 'Search for something'
+  username: Your username
+  password: Your password
+  token: Your 2nd factor token
+  password_again: Your password again
+  first_name: Your first name
+  last_name: Your last name
+  email: Your email address
+  new_password: Your new password
+  new_password_again: Your new password again
+value_error:
+  username: Please type in your username
+  password: Please type in your password
+  token: Please type in your token
+  password_again: Please type in your password again
+  first_name: Please type in your first name
+  last_name: Please type in your last name
+  email: Please type in your email
+  passwords_not_equal: Passwords are not equal
+message:
+  successfully_saved: Successfully saved.
+  successfully_changed_password: Successfully changed password.
+  logged_out: You are logged out.
+  successfully_logged_in: Successfully logged in.
+error:
+  cannot_save: Cannot save
+  cannot_login: Cannot login
+label:
+  analyze: Analyze
+  comment: Comment
+  flags: Flags
+  condition: Condition
+  last_evaluated: Last evaluated
+  review_status: Review status
+  submitter_name: Submitter name
+  population: Population
+  maf: MAF
+  username: Username
+  password: Password
+  token: Token
+  password_again: Password again
+  first_name: First name
+  last_name: Last name
+  email: Email
+  login: Login
+  logout: Logout
+  register: Register
+  new_password: New password
+  new_password_again: New password again
+  change: Change
+  change_password: Change password
+  age_distribution: Age distribution
+  minor_allele_frequency: Minor allele frequency
+subLabel:
+  transcript_analyze: 'To be analyzed'
+  transcript_comment: 'Comment for this transcript'
+dialog:
+  title:
+    confirm_delete: 'Confirm deletion'
+  message:
+    confirm_delete: 'Do you really want to delete this entry?'

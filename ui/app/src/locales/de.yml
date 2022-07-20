@@ -1,0 +1,15 @@
+---
+app:
+  title: 'Variant Analysis Platform'
+nav:
+  search: Suche
+  samples: Samples
+  variants: Varianten
+  transcripts: Transcripte
+  genes: Gene
+title:
+  variants: Varianten
+  transcripts: Transcripte
+  genes: Gene
+hint:
+  search: 'Suchen Sie nach etwas'

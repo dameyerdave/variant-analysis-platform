@@ -1,0 +1,60 @@
+{
+  "name": "app",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "vue-tsc --noEmit && vite build",
+    "dev": "vite",
+    "format": "prettier --write . && npx eslint --ext .js,.vue --ignore-path .gitignore --fix",
+    "i18n:report": "vue-cli-service i18n:report --src \"./src/**/*.?(js|vue)\" --locales \"./src/locales/**/*.json\"",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@quasar/app-webpack": "^3.5.7",
+    "@quasar/extras": "^1.14.2",
+    "axios": "^0.27.2",
+    "blitzar": "^1.2.1",
+    "chart.js": "^3.8.0",
+    "jwt-decode": "^3.1.2",
+    "lodash": "^4.17.21",
+    "quasar": "^2.7.5",
+    "uuid": "^8.3.2",
+    "vue": "^3.2.37",
+    "vue-axios": "^3.4.1",
+    "vue-chartjs": "^4.1.1",
+    "vue-i18n": "^9.1.10",
+    "vue-router": "^4.1.1",
+    "vuex": "^4.0.2"
+  },
+  "devDependencies": {
+    "@intlify/vite-plugin-vue-i18n": "^3.4.0",
+    "@intlify/vue-i18n-loader": "^5.0.0",
+    "@quasar/vite-plugin": "^1.0.6",
+    "@typescript-eslint/eslint-plugin": "^5.17.0",
+    "@typescript-eslint/parser": "^5.17.0",
+    "@vitejs/plugin-vue": "^2.2.0",
+    "@vue/cli-shared-utils": "^5.0.8",
+    "eslint": "8.19.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-unused-imports": "^2.0.0",
+    "eslint-plugin-vue": "^9.2.0",
+    "prettier": "2.7.1",
+    "sass": "1.53.0",
+    "typescript": "^4.6.3",
+    "vite": "^2.9.14",
+    "vite-plugin-eslint": "^1.6.1",
+    "vue-tsc": "^0.38.3"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
