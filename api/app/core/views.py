@@ -1,23 +1,17 @@
-from django import views
 from rest_framework import viewsets
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import views
+from django import views as django_views
 from core.helpers import parse_bool
 from django.db.models import Prefetch
-from django.contrib.auth import get_user_model
 from config.config import Config
 from django.template.loader import get_template
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import xhtml2pdf.pisa as pisa
 from io import BytesIO
 import base64
-import json
-import traceback
-from django.db.utils import IntegrityError
 from django.utils.translation import gettext as _
 
-from users.managers import CustomUserManager
+from core.models import Gene, Sample, Transcript, Variant
 
 class DefaultViewSet(viewsets.ModelViewSet):
     @classmethod
@@ -80,7 +74,7 @@ class DefaultViewSet(viewsets.ModelViewSet):
 
       return _DefaultViewSet
 
-class Report(views.View):
+class ReportView(django_views.View):
   def get(self, request, format, **kwargs):
     template = get_template('default_report.html')
     html = template.render({'format': format}, request)
@@ -93,3 +87,15 @@ class Report(views.View):
         return HttpResponse(base64.b64encode(html.encode('utf-8')), content_type='text/plain')
     else:
       return HttpResponse(html)
+
+class StatisticsView(views.APIView):
+  def get(self, request, **kwargs):
+    stats = {
+      'counts': {
+        'samples': Sample.objects.count(),
+        'variants': Variant.objects.count(),
+        'transcripts': Transcript.objects.count(),
+        'genes': Gene.objects.count(),
+      }
+    }
+    return JsonResponse(stats)
