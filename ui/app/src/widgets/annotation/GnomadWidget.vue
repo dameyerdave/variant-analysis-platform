@@ -66,7 +66,7 @@ const ageDistributionData = computed(() => {
         {
           label: 'hom',
           backgroundColor: 'green',
-          data: props.value.age_distribution.het.bin_freq,
+          data: props.value.age_distribution.hom.bin_freq,
         },
       ],
     }
@@ -105,6 +105,11 @@ const chartOptions = {
           :height="200"
         />
       </div>
+    </div>
+  </div>
+  <div v-else class="container">
+    <div class="row">
+      <div class="col">{{ props.options.na_string }}</div>
     </div>
   </div>
 </template>
