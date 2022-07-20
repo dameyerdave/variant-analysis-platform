@@ -73,6 +73,10 @@ label:
   change_password: Change password
   age_distribution: Age distribution
   minor_allele_frequency: Minor allele frequency
+  num_samples: Samples
+  num_variants: Variants
+  num_transcripts: Transcripts
+  num_genes: Genes
 subLabel:
   transcript_analyze: 'To be analyzed'
   transcript_comment: 'Comment for this transcript'
