@@ -1,0 +1,27 @@
+###
+# Groups
+###
+- fields:
+    name: team_manager
+  model: auth.group
+  pk: 1
+- fields:
+    name: team_member
+  model: auth.group
+  pk: 2
+- fields:
+    name: team_pilot
+  model: auth.group
+  pk: 3
+- fields:
+    name: medical
+  model: auth.group
+  pk: 4
+- fields:
+    name: tech_expert
+  model: auth.group
+  pk: 5
+- fields:
+    name: head_of_discipline
+  model: auth.group
+  pk: 6

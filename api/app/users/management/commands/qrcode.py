@@ -11,5 +11,4 @@ class Command(BaseCommand):
         superuser = environ.get('DJANGO_SU_EMAIL', 'admin@admin.com')
         user = get_user_model().objects.get(email=superuser)
         qrcode = user.otp_qrcode()
-        qrcode.print_ascii()
-
+        qrcode.print_ascii(tty=True)

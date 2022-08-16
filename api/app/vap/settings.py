@@ -171,7 +171,7 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
     'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
     # We overwrite the token obtain serializer to support OTP
-    'TOKEN_OBTAIN_SERIALIZER': 'core.authentication.serializers.TokenObtainPair2FASerializer',
+    'TOKEN_OBTAIN_SERIALIZER': 'users.serializers.TokenObtainPair2FASerializer',
 
     'JTI_CLAIM': 'jti',
 

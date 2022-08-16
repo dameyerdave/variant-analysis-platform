@@ -53,15 +53,15 @@ const openDetails = row => {
             <DynamicTable
               container-class="q-ma-0"
               flat
-              :endpoint="`/variants/?sample_variants__sample__id=${route.params.id}`"
-              :config="store.getters.config.variant"
+              :endpoint="`/samplevariants/?sample__id=${route.params.id}&expand=t`"
+              :config="store.getters.config.samplevariant"
               :options="store.getters.config.options"
               @open-details="openDetails"
             >
               <template #details="{ props }">
                 <SimpleAnnotationWidget
                   :annotations="props.row.annotations"
-                  :config="store.getters.config.variant"
+                  :config="store.getters.config.samplevariant"
                   :options="store.getters.config.options"
                 />
               </template>

@@ -6,7 +6,7 @@ from users.views import UserViewSet
 
 @register
 class UserEndpoint(Endpoint):
-    url = 'auth/users'
+    url='auth/users'
     permission_classes = (IsOwnUser,)
     model = get_user_model()
     base_viewset = UserViewSet

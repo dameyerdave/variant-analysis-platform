@@ -1,10 +1,52 @@
 <!DOCTYPE html>
 <html>
-  <head> </head>
+  <head>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 10px
+      }
+      .regards {
+        margin-top: 20px;
+        margin-left: 10px;
+      }
+    </style>
+  </head>
   <body>
-    <h3>Your otp token</h3>
-    <div>
-      <img src="data:image/jpeg;base64,{{qrcode}}" />
-    </div>
+    <p>
+      <h4>Dear {{ user.first_name }} {{ user.last_name }}</h4>
+    </p>
+    <p>
+      Thank you for registering for the <em>Variant Analysis Platform</em>.
+    </p>
+    <p>
+      To login to the <em>Variant Analysis Platform</em> you need a second factor. 
+      In this email you get a qr code you can scan with an appropriate OTP app like:
+      <ul>
+        <li>FreeOTP Authenticator (<a href="https://apps.apple.com/us/app/freeotp-authenticator/id872559395">iPhone</a> | <a href="https://play.google.com/store/apps/details?id=org.fedorahosted.freeotp&hl=en&gl=US">Android</a>)</li>
+        <li>Google Authenticator (<a href="https://apps.apple.com/us/app/google-authenticator/id388497605">iPhone</a> | <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en&gl=US">Android</a>)</li>
+      </ul>
+    </p>
+
+    <p>
+      <div>
+        <img src="data:image/jpeg;base64,{{qrcode}}" />
+      </div>
+    </p>
+
+    <p>
+      <h4>How to proceed?</h4>
+      <ol>
+        <li>Download an <i>Authenticator App</i> to you smart phone.</li>
+        <li>Scan the QR code from this email.</li>
+        <li>Login to the <a href="#"><em>Variant Analysis Platform</em></a>.</li>
+        <li>As the token type in the 6 digits shown in your <i>Authenticator App</i></li>
+      </ol>
+    </p>
+    
+    <p class="regards">
+      Sincerely,<br/><br/>
+      <em>Variant Analysis Platform Registration</em>
+    </p>
   </body>
 </html>

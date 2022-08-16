@@ -7,7 +7,9 @@ import qrcode
 import base64
 import io
 
+
 class User(AbstractUser):
+    # Remove the username field
     username = None
     email = models.EmailField(_('email address'), unique=True)
 
@@ -17,7 +19,14 @@ class User(AbstractUser):
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.email        
+        return self.email
+
+    @property
+    def context(self):
+        return {
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+        }
 
     def otp_qrcode_value(self):
         device = self.totpdevice_set.first()
@@ -34,6 +43,14 @@ class User(AbstractUser):
         buffer = io.BytesIO()
         img.save(buffer)
         return base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+    @property
+    def group_list(self):
+        return self.groups.values_list('name', flat=True)
+
+    # Permission related methods
+    def is_in_any_group(self, groups):
+        return any(group in groups for group in self.group_list)
 
     class Meta:
         db_table = 'auth_user'

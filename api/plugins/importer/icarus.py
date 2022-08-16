@@ -15,9 +15,9 @@ class ImportStrategy(VepStrategy):
         variant = None
         if data:
             params.update({
-                'vep_options': {
-                    'assembly': 'GRCh38'
-                },
+                # 'vep_options': {
+                #     'assembly': 'GRCh38'
+                # },
                 'zygosity': data.get('Zygosity').split(':')[0]
             })
             vep_info = self._get_vep_info(params)

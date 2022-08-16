@@ -20,6 +20,7 @@ RUN pip install -r /requirements.txt
 RUN apk del .tmp-build-deps
 
 # COPY ./app /app
+RUN mkdir -p /app
 WORKDIR /app
 
 RUN mkdir -p /vol/web/media

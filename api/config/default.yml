@@ -203,9 +203,36 @@ evidence:
         format: ellipsis
 samplevariant:
   fields:
-    - sample
-    - variant
+    - variant__assembly:
+        label: assembly
+    - variant__chromosome:
+        label: chromosome
+    - variant__start:
+        label: start
+    - variant__end:
+        label: end
     - zygosity
+    - variant__allele_string:
+        format: vep_allele_string
+    - variant__strand:
+        format: vep_strand
+    - variant__variant_class:
+        label: variant_class
+    - variant__extra__most_severe_consequence:
+        label: consequence
+    - variant__gene_names:
+        label: genes
+    - variant__annotations__minor_allele_freq:
+        label: maf
+    - variant__annotations__clin_sig:
+        label: clinical_significances
+        highlight:
+          benign: green-5
+          likely_benign: light-green-5
+          pathogenic: red-5
+          likely_pathogenic: orange-5
+          uncertain_significance: light-blue-5
+          drug_response: orange-2
   ordering:
     - sample__id
   # filters:
@@ -251,6 +278,7 @@ import:
   icarus:
     strategy: icarus
     format: tsv
+    assembly: GRCh38
     # this takes the importer module from modules/importer
     chromosome:
       field: Chromosome

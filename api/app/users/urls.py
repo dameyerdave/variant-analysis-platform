@@ -1,6 +1,6 @@
-from django.urls import path, include
-from drf_auto_endpoint.router import router
+from django.urls import path
+from users.views import UserViewSet
+from rest_framework.routers import DefaultRouter
 
-urlpatterns = [
-    path('auth/users/', include(router.urls)),
-]
+router = DefaultRouter()
+router.register('auth/users', UserViewSet, basename='users')

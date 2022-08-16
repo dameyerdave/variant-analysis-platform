@@ -5,6 +5,7 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from uuid import uuid4
 from emailer import Emailer
 
+
 class CustomUserManager(BaseUserManager):
     """
     Custom user model manager where email is the unique identifiers
@@ -12,17 +13,18 @@ class CustomUserManager(BaseUserManager):
     """
 
     def __createOTPDevice(self, user):
+        print('__createOTPDevice')
         TOTPDevice.objects.create(
-          user = user,
-          name = uuid4().hex,
-          confirmed = True
+            user=user,
+            name=uuid4().hex,
+            confirmed=True
         )
 
     def __sendOTPEmail(self, user):
         # Send an email including the qrcode to the user
-        Emailer.send_using_template(_('Your OPT token'), (user.email,), 'users/default_otp_token.html', {'qrcode': user.otp_qrcode_base64()})
+        Emailer.send_using_template(_('Your OPT token'), (user.email,),
+                                    'users/default_otp_token.html', {'user': user.context, 'qrcode': user.otp_qrcode_base64()})
 
-    
     def create_user(self, email, password, **extra_fields):
         """
         Create and save a User with the given email and password.
